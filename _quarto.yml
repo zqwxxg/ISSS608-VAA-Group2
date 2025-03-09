@@ -2,16 +2,17 @@ project:
   type: website
 
 website:
-  title: "ISSS608-VAA-Group2"
+  title: "RainSense"
+  search: false
   navbar:
-    left:
-      - href: index.qmd
-        text: Home
-      - about.qmd
+    background: light
+    right:
+      - href: "Pages/Proposal/proposal.html"
+        text: PROPOSAL
 
 format:
   html:
-    theme: cosmo
+    theme: morph
     css: styles.css
     toc: true
 
