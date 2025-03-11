@@ -6,7 +6,6 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Group 2">
 
 <title>Project Proposal – RainSense</title>
 <style>
@@ -59,7 +58,7 @@ ul.task-list li input[type="checkbox"] {
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top">
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
@@ -84,42 +83,172 @@ ul.task-list li input[type="checkbox"] {
     </nav>
 </header>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Project Proposal</h1>
+                      </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#motivation" id="toc-motivation" class="nav-link active" data-scroll-target="#motivation">Motivation</a></li>
+  <li><a href="#objectives" id="toc-objectives" class="nav-link" data-scroll-target="#objectives">Objectives</a></li>
+  <li><a href="#methodology" id="toc-methodology" class="nav-link" data-scroll-target="#methodology">Methodology</a>
+  <ul class="collapse">
+  <li><a href="#data-extraction" id="toc-data-extraction" class="nav-link" data-scroll-target="#data-extraction">Data Extraction</a></li>
+  <li><a href="#data-pre-processing" id="toc-data-pre-processing" class="nav-link" data-scroll-target="#data-pre-processing">Data Pre-processing</a></li>
+  <li><a href="#exploratory-data-analysis" id="toc-exploratory-data-analysis" class="nav-link" data-scroll-target="#exploratory-data-analysis">Exploratory Data Analysis</a></li>
+  </ul></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content quarto-banner-title-block" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-<h1 class="title">Project Proposal</h1>
+
+
+
+
+<section id="motivation" class="level1">
+<h1>Motivation</h1>
+<p>As a tropical island nation, Singapore experiences dynamic rainfall patterns influenced by monsoon seasons, climate change, and localized weather variations. Sudden heavy downpours can lead to urban flooding, disrupting transportation and daily life. With increasing unpredictability in weather patterns, developing data-driven predictive insights is crucial for effective climate adaptation and urban resilience.</p>
+<p>By analyzing rainfall patterns both spatially (geographic variations) and temporally (seasonal and long-term trends), we can detect anomalies, shifts, and emerging precipitation trends. Integrating time-series forecasting models further enables short-term and long-term rainfall predictions, supporting early warning systems, infrastructure planning, and climate mitigation strategies. This study aims to bridge the gap by quantifying rainfall variability and forecasting future precipitation to enhance decision-making. The insights gained will not only provide the public with more accurate weather information for better planning but also equip authorities with scientific data to improve flood warnings and emergency response measures in vulnerable areas.</p>
+</section>
+<section id="objectives" class="level1">
+<h1>Objectives</h1>
+<p>This project aims to develop an interactive Shiny web application that facilitates real-time and historical analysis of rainfall patterns in Singapore while providing predictive insights for extreme rainfall events. The key objectives are as follows:</p>
+<ol type="1">
+<li><p><strong>Analyze Spatiotemporal Rainfall Patterns</strong>: Identify seasonal trends and shifts in Singapore’s rainfall using temporal decomposition and change point detection. Conduct spatial analysis to detect rainfall intensity hotspots using geospatial interpolation techniques.</p></li>
+<li><p><strong>Detect Anomalies and Extreme Rainfall Events</strong>: Compute moving averages to visualize and quantify rainfall fluctuations. Identify unusual weather trends and deviations from historical norms.</p></li>
+<li><p><strong>Predict Future Rainfall Trends</strong>: Develop statistical time-series forecasting models to predict rainfall intensity. Evaluate model performance using accuracy metrics to ensure reliable forecasts.</p></li>
+<li><p><strong>User Interaction and Alerts</strong>: Provide an intuitive user interface that allows users to explore rainfall data and predictions for specific locations. Implement an early warning system for extreme rainfall events, enabling the public and authorities to take proactive measures in mitigating potential disruptions</p></li>
+</ol>
+</section>
+<section id="methodology" class="level1">
+<h1>Methodology</h1>
+<p>The methodology consists of three main components: Spatiotemporal Analysis, Rainfall Anomaly Detection, and Time-Series Forecasting.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../..\images/RainSense.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
 </div>
+<section id="data-extraction" class="level2">
+<h2 class="anchored" data-anchor-id="data-extraction">Data Extraction</h2>
+<p>The key datasets used in this project is Meteorological Service Singapore (MSS) – Rainfall &amp; Weather Data. This dataset provides historical and real-time weather observations, including rainfall, temperature, and humidity levels across Singapore.</p>
+<div id="data_table" style="font-size: 14px">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 26%">
+<col style="width: 45%">
+<col style="width: 27%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Description</th>
+<th>Time Range &amp; Spatial Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Location</td>
+<td>Rainfall data collected from 50-60 locations across Singapore</td>
+<td>2018 – Present, 62 locations</td>
+</tr>
+<tr class="even">
+<td>Year-Month</td>
+<td>Timestamp of the recorded data (organized by year and month)</td>
+<td>2018 – Present, 62 locations</td>
+</tr>
+<tr class="odd">
+<td>Total daily rainfall (mm)</td>
+<td>Total daily rainfall, used to measure overall precipitation levels</td>
+<td>2018 – Present, 62 locations</td>
+</tr>
+<tr class="even">
+<td>Hourly rainfall intensity (mm/hr)</td>
+<td>Hourly rainfall intensity, used to analyze extreme rainfall events</td>
+<td>2018 – Present, 62 locations</td>
+</tr>
+<tr class="odd">
+<td>Maximum 30/60/120-minute rainfall (mm)</td>
+<td>Maximum rainfall over 30/60/120 minutes, used to detect extreme weather patterns</td>
+<td>2018 – Present, 62 locations</td>
+</tr>
+<tr class="even">
+<td>Temperature (°C)</td>
+<td>Daily temperature variations, used to analyze correlations with rainfall patterns</td>
+<td>2018 – Present, 62 locations</td>
+</tr>
+<tr class="odd">
+<td>Humidity (%)</td>
+<td>Recorded humidity levels, used to study the impact of humidity on rainfall</td>
+<td>2018 – Present, 62 locations</td>
+</tr>
+<tr class="even">
+<td>Wind speed (km/h)</td>
+<td>Wind speed measurements, used to examine its relationship with rainfall patterns</td>
+<td>2018 – Present, 62 locations</td>
+</tr>
+<tr class="odd">
+<td>Longitude &amp; Latitude of Rainfall Stations</td>
+<td>Geographic coordinates of the 41 rainfall stations for spatial mapping</td>
+<td>Static data, 41 rainfall stations</td>
+</tr>
+<tr class="even">
+<td>Shapefile of Singapore</td>
+<td>Geospatial vector data for spatial analysis</td>
+<td>Nationwide</td>
+</tr>
+<tr class="odd">
+<td>Flood prone areas in Singapore</td>
+<td>Low-lying areas with a history of flooding, used as an overlay in spatial analysis.</td>
+<td>36 locations</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="data-pre-processing" class="level2">
+<h2 class="anchored" data-anchor-id="data-pre-processing">Data Pre-processing</h2>
+<p>To ensure data consistency and accuracy, the collected datasets will undergo preprocessing before analysis. This process includes data cleaning, transformation, and integration of meteorological and geospatial data to prepare them for extreme rainfall prediction.</p>
+<ol type="1">
+<li><p><strong>Data Collection &amp; Integration</strong>: Historical rainfall data from 62 MSS stations will be downloaded monthly, merged, and standardized into a single structured dataset for spatial and temporal analysis.</p></li>
+<li><p><strong>Handling Missing Values</strong>: Short-term missing values in rainfall, temperature, humidity, and wind speed will be handled using linear interpolation, while longer gaps will be smoothed using moving averages.</p></li>
+<li><p><strong>Time-Series Processing (Resampling &amp; Aggregation)</strong>: Hourly rainfall data will be aggregated into daily, monthly, and seasonal trends to detect long-term variations and rolling averages will be applied for extreme event detection.</p></li>
+<li><p><strong>Geospatial Data Processing</strong>: Longitude and latitude of rainfall stations will be retrieved using Google Maps &amp; AI tools, enabling spatial interpolation (Kriging, IDW) for mapping rainfall intensity.</p></li>
+<li><p><strong>Feature Engineering</strong>: To enhance the predictive accuracy of rainfall models, several features will be engineered. Extreme rainfall indicators, such as maximum 30/60/120-minute rainfall intensities, will be computed to detect extreme weather patterns. Additionally, seasonal variables, including monsoon season labels (Northeast/Southwest monsoon periods) and ENSO indices (El Niño/La Niña), will be integrated to assess the impact of climate variations on rainfall trends.</p></li>
+</ol>
+</section>
+<section id="exploratory-data-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="exploratory-data-analysis">Exploratory Data Analysis</h2>
+<p>EDA will be conducted to understand rainfall trends, seasonality, and spatial distributions. This includes:</p>
+<ol type="a">
+<li><p><strong>Statistical Summary</strong>: Compute descriptive statistics (mean, median, standard deviation) for rainfall, temperature, and humidity.</p></li>
+<li><p><strong>Time-Series Visualization</strong>: Generate line plots, histograms, and seasonal trend plots to analyses rainfall variability over time.</p></li>
+<li><p><strong>Geospatial Mapping</strong>: Create heatmaps and contour maps to visualize rainfall intensity across Singapore’s 62 stations.</p></li>
+<li><p><strong>Interactive Shiny Visualizations</strong>: Enable users to explore historical rainfall trends and spatial distributions dynamically.</p></li>
+</ol>
 
 
-
-<div class="quarto-title-meta">
-
-    <div>
-    <div class="quarto-title-meta-heading">Author</div>
-    <div class="quarto-title-meta-contents">
-             <p>Group 2 </p>
-          </div>
-  </div>
-    
-  
-    
-  </div>
-  
-
-
-</header>
-
-
-
-
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

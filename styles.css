@@ -2,4 +2,26 @@
 
 body {
   color: black;
+  background: #f0f5fa;
+}
+
+.navbar li.nav-item a.nav-link span {
+  color: white !important;
+}
+
+table {
+  border: 2px solid lightGrey;
+  
+}
+
+th {
+    border: 2px solid lightGrey;
+}
+
+td {
+    border: 2px solid lightGrey;
+}
+
+tr:last-child td {
+    border-bottom: 2px solid lightGrey;
 }

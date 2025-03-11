@@ -5,7 +5,8 @@ website:
   title: "RainSense"
   search: false
   navbar:
-    background: light
+    background: "#134178"
+    foreground: white
     right:
       - href: "Pages/Proposal/proposal.html"
         text: PROPOSAL

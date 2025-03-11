@@ -1,4 +1,74 @@
 ---
 title: "Project Proposal"
-author: "Group 2"
+title-block-banner: true
 ---
+
+# Motivation
+
+As a tropical island nation, Singapore experiences dynamic rainfall patterns influenced by monsoon seasons, climate change, and localized weather variations. Sudden heavy downpours can lead to urban flooding, disrupting transportation and daily life. With increasing unpredictability in weather patterns, developing data-driven predictive insights is crucial for effective climate adaptation and urban resilience.
+
+By analyzing rainfall patterns both spatially (geographic variations) and temporally (seasonal and long-term trends), we can detect anomalies, shifts, and emerging precipitation trends. Integrating time-series forecasting models further enables short-term and long-term rainfall predictions, supporting early warning systems, infrastructure planning, and climate mitigation strategies. This study aims to bridge the gap by quantifying rainfall variability and forecasting future precipitation to enhance decision-making. The insights gained will not only provide the public with more accurate weather information for better planning but also equip authorities with scientific data to improve flood warnings and emergency response measures in vulnerable areas.
+
+# Objectives
+
+This project aims to develop an interactive Shiny web application that facilitates real-time and historical analysis of rainfall patterns in Singapore while providing predictive insights for extreme rainfall events. The key objectives are as follows:
+
+1.  **Analyze Spatiotemporal Rainfall Patterns**: Identify seasonal trends and shifts in Singapore’s rainfall using temporal decomposition and change point detection. Conduct spatial analysis to detect rainfall intensity hotspots using geospatial interpolation techniques.
+
+2.  **Detect Anomalies and Extreme Rainfall Events**: Compute moving averages to visualize and quantify rainfall fluctuations. Identify unusual weather trends and deviations from historical norms.
+
+3.  **Predict Future Rainfall Trends**: Develop statistical time-series forecasting models to predict rainfall intensity. Evaluate model performance using accuracy metrics to ensure reliable forecasts.
+
+4.  **User Interaction and Alerts**: Provide an intuitive user interface that allows users to explore rainfall data and predictions for specific locations. Implement an early warning system for extreme rainfall events, enabling the public and authorities to take proactive measures in mitigating potential disruptions
+
+# Methodology
+
+The methodology consists of three main components: Spatiotemporal Analysis, Rainfall Anomaly Detection, and Time-Series Forecasting.
+
+![](/images/RainSense.png){fig-align="center"}
+
+## Data Extraction
+
+The key datasets used in this project is Meteorological Service Singapore (MSS) – Rainfall & Weather Data. This dataset provides historical and real-time weather observations, including rainfall, temperature, and humidity levels across Singapore.
+
+::: {#data_table style="font-size: 14px"}
+| Variable | Description | Time Range & Spatial Coverage |
+|-------------------|---------------------------------|--------------------|
+| Location | Rainfall data collected from 50-60 locations across Singapore | 2018 – Present, 62 locations |
+| Year-Month | Timestamp of the recorded data (organized by year and month) | 2018 – Present, 62 locations |
+| Total daily rainfall (mm) | Total daily rainfall, used to measure overall precipitation levels | 2018 – Present, 62 locations |
+| Hourly rainfall intensity (mm/hr) | Hourly rainfall intensity, used to analyze extreme rainfall events | 2018 – Present, 62 locations |
+| Maximum 30/60/120-minute rainfall (mm) | Maximum rainfall over 30/60/120 minutes, used to detect extreme weather patterns | 2018 – Present, 62 locations |
+| Temperature (°C) | Daily temperature variations, used to analyze correlations with rainfall patterns | 2018 – Present, 62 locations |
+| Humidity (%) | Recorded humidity levels, used to study the impact of humidity on rainfall | 2018 – Present, 62 locations |
+| Wind speed (km/h) | Wind speed measurements, used to examine its relationship with rainfall patterns | 2018 – Present, 62 locations |
+| Longitude & Latitude of Rainfall Stations | Geographic coordinates of the 41 rainfall stations for spatial mapping | Static data, 41 rainfall stations |
+| Shapefile of Singapore | Geospatial vector data for spatial analysis | Nationwide |
+| Flood prone areas in Singapore | Low-lying areas with a history of flooding, used as an overlay in spatial analysis. | 36 locations |
+:::
+
+## Data Pre-processing
+
+To ensure data consistency and accuracy, the collected datasets will undergo preprocessing before analysis. This process includes data cleaning, transformation, and integration of meteorological and geospatial data to prepare them for extreme rainfall prediction.
+
+1.  **Data Collection & Integration**: Historical rainfall data from 62 MSS stations will be downloaded monthly, merged, and standardized into a single structured dataset for spatial and temporal analysis.
+
+2.  **Handling Missing Values**: Short-term missing values in rainfall, temperature, humidity, and wind speed will be handled using linear interpolation, while longer gaps will be smoothed using moving averages.
+
+3.  **Time-Series Processing (Resampling & Aggregation)**: Hourly rainfall data will be aggregated into daily, monthly, and seasonal trends to detect long-term variations and rolling averages will be applied for extreme event detection.
+
+4.  **Geospatial Data Processing**: Longitude and latitude of rainfall stations will be retrieved using Google Maps & AI tools, enabling spatial interpolation (Kriging, IDW) for mapping rainfall intensity.
+
+5.  **Feature Engineering**: To enhance the predictive accuracy of rainfall models, several features will be engineered. Extreme rainfall indicators, such as maximum 30/60/120-minute rainfall intensities, will be computed to detect extreme weather patterns. Additionally, seasonal variables, including monsoon season labels (Northeast/Southwest monsoon periods) and ENSO indices (El Niño/La Niña), will be integrated to assess the impact of climate variations on rainfall trends.
+
+## Exploratory Data Analysis
+
+EDA will be conducted to understand rainfall trends, seasonality, and spatial distributions. This includes:
+
+a.  **Statistical Summary**: Compute descriptive statistics (mean, median, standard deviation) for rainfall, temperature, and humidity.
+
+b.  **Time-Series Visualization**: Generate line plots, histograms, and seasonal trend plots to analyses rainfall variability over time.
+
+c.  **Geospatial Mapping**: Create heatmaps and contour maps to visualize rainfall intensity across Singapore’s 62 stations.
+
+d.  **Interactive Shiny Visualizations**: Enable users to explore historical rainfall trends and spatial distributions dynamically.

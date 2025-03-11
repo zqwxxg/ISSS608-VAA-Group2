@@ -1,16 +1,37 @@
 [
   {
+    "objectID": "Pages/Proposal/proposal.html",
+    "href": "Pages/Proposal/proposal.html",
+    "title": "Project Proposal",
+    "section": "",
+    "text": "As a tropical island nation, Singapore experiences dynamic rainfall patterns influenced by monsoon seasons, climate change, and localized weather variations. Sudden heavy downpours can lead to urban flooding, disrupting transportation and daily life. With increasing unpredictability in weather patterns, developing data-driven predictive insights is crucial for effective climate adaptation and urban resilience.\nBy analyzing rainfall patterns both spatially (geographic variations) and temporally (seasonal and long-term trends), we can detect anomalies, shifts, and emerging precipitation trends. Integrating time-series forecasting models further enables short-term and long-term rainfall predictions, supporting early warning systems, infrastructure planning, and climate mitigation strategies. This study aims to bridge the gap by quantifying rainfall variability and forecasting future precipitation to enhance decision-making. The insights gained will not only provide the public with more accurate weather information for better planning but also equip authorities with scientific data to improve flood warnings and emergency response measures in vulnerable areas."
+  },
+  {
+    "objectID": "Pages/Proposal/proposal.html#data-extraction",
+    "href": "Pages/Proposal/proposal.html#data-extraction",
+    "title": "Project Proposal",
+    "section": "Data Extraction",
+    "text": "Data Extraction\nThe key datasets used in this project is Meteorological Service Singapore (MSS) – Rainfall & Weather Data. This dataset provides historical and real-time weather observations, including rainfall, temperature, and humidity levels across Singapore.\n\n\n\n\n\n\n\n\n\nVariable\nDescription\nTime Range & Spatial Coverage\n\n\n\n\nLocation\nRainfall data collected from 50-60 locations across Singapore\n2018 – Present, 62 locations\n\n\nYear-Month\nTimestamp of the recorded data (organized by year and month)\n2018 – Present, 62 locations\n\n\nTotal daily rainfall (mm)\nTotal daily rainfall, used to measure overall precipitation levels\n2018 – Present, 62 locations\n\n\nHourly rainfall intensity (mm/hr)\nHourly rainfall intensity, used to analyze extreme rainfall events\n2018 – Present, 62 locations\n\n\nMaximum 30/60/120-minute rainfall (mm)\nMaximum rainfall over 30/60/120 minutes, used to detect extreme weather patterns\n2018 – Present, 62 locations\n\n\nTemperature (°C)\nDaily temperature variations, used to analyze correlations with rainfall patterns\n2018 – Present, 62 locations\n\n\nHumidity (%)\nRecorded humidity levels, used to study the impact of humidity on rainfall\n2018 – Present, 62 locations\n\n\nWind speed (km/h)\nWind speed measurements, used to examine its relationship with rainfall patterns\n2018 – Present, 62 locations\n\n\nLongitude & Latitude of Rainfall Stations\nGeographic coordinates of the 41 rainfall stations for spatial mapping\nStatic data, 41 rainfall stations\n\n\nShapefile of Singapore\nGeospatial vector data for spatial analysis\nNationwide\n\n\nFlood prone areas in Singapore\nLow-lying areas with a history of flooding, used as an overlay in spatial analysis.\n36 locations"
+  },
+  {
+    "objectID": "Pages/Proposal/proposal.html#data-pre-processing",
+    "href": "Pages/Proposal/proposal.html#data-pre-processing",
+    "title": "Project Proposal",
+    "section": "Data Pre-processing",
+    "text": "Data Pre-processing\nTo ensure data consistency and accuracy, the collected datasets will undergo preprocessing before analysis. This process includes data cleaning, transformation, and integration of meteorological and geospatial data to prepare them for extreme rainfall prediction.\n\nData Collection & Integration: Historical rainfall data from 62 MSS stations will be downloaded monthly, merged, and standardized into a single structured dataset for spatial and temporal analysis.\nHandling Missing Values: Short-term missing values in rainfall, temperature, humidity, and wind speed will be handled using linear interpolation, while longer gaps will be smoothed using moving averages.\nTime-Series Processing (Resampling & Aggregation): Hourly rainfall data will be aggregated into daily, monthly, and seasonal trends to detect long-term variations and rolling averages will be applied for extreme event detection.\nGeospatial Data Processing: Longitude and latitude of rainfall stations will be retrieved using Google Maps & AI tools, enabling spatial interpolation (Kriging, IDW) for mapping rainfall intensity.\nFeature Engineering: To enhance the predictive accuracy of rainfall models, several features will be engineered. Extreme rainfall indicators, such as maximum 30/60/120-minute rainfall intensities, will be computed to detect extreme weather patterns. Additionally, seasonal variables, including monsoon season labels (Northeast/Southwest monsoon periods) and ENSO indices (El Niño/La Niña), will be integrated to assess the impact of climate variations on rainfall trends."
+  },
+  {
+    "objectID": "Pages/Proposal/proposal.html#exploratory-data-analysis",
+    "href": "Pages/Proposal/proposal.html#exploratory-data-analysis",
+    "title": "Project Proposal",
+    "section": "Exploratory Data Analysis",
+    "text": "Exploratory Data Analysis\nEDA will be conducted to understand rainfall trends, seasonality, and spatial distributions. This includes:\n\nStatistical Summary: Compute descriptive statistics (mean, median, standard deviation) for rainfall, temperature, and humidity.\nTime-Series Visualization: Generate line plots, histograms, and seasonal trend plots to analyses rainfall variability over time.\nGeospatial Mapping: Create heatmaps and contour maps to visualize rainfall intensity across Singapore’s 62 stations.\nInteractive Shiny Visualizations: Enable users to explore historical rainfall trends and spatial distributions dynamically."
+  },
+  {
     "objectID": "about.html",
     "href": "about.html",
     "title": "About",
     "section": "",
     "text": "About this site\n\n1 + 1\n\n[1] 2"
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "ISSS608-VAA-Group2",
-    "section": "",
-    "text": "Hello"
   }
 ]

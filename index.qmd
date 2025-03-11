@@ -1,5 +1,5 @@
 ---
-title: "ISSS608-VAA-Group2"
+title: "Spatiotemporal Rainfall Variability and Time-Series Forecasting for Rainfall Prediction in Singapore"
 ---
 
-Hello
+![](images/logo.png){fig-align="center"}
