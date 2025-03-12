@@ -21,6 +21,7 @@ th {
 td {
     border: 2px solid lightGrey;
 }
+
 tr:last-child td {
     border-bottom: 2px solid lightGrey;
 }
