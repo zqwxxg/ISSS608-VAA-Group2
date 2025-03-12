@@ -33,7 +33,7 @@ The key datasets used in this project is Meteorological Service Singapore (MSS) 
 
 ::: {#data_table style="font-size: 14px"}
 | Variable | Description | Time Range & Spatial Coverage |
-|-------------------|---------------------------------|--------------------|
+|----|----|----|
 | Location | Rainfall data collected from 50-60 locations across Singapore | 2018 – Present, 62 locations |
 | Year-Month | Timestamp of the recorded data (organized by year and month) | 2018 – Present, 62 locations |
 | Total daily rainfall (mm) | Total daily rainfall, used to measure overall precipitation levels | 2018 – Present, 62 locations |
