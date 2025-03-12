@@ -37,4 +37,8 @@ body {
     border-top: 2px solid lightGrey;
     border-bottom: 2px solid lightGrey;
   }
+  
+  tr:last-child td {
+    border-bottom: 2px solid lightGrey;
+  }
 }

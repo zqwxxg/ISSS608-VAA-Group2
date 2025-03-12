@@ -99,6 +99,8 @@ This step involves building a statistical model to predict future rainfall. This
 
 # Prototype
 
+![](/images/prototype.jpg){fig-align="center"}
+
 # Packages
 
 ::: {#tools .tools}
