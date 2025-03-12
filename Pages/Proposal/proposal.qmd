@@ -25,7 +25,7 @@ This project aims to develop an interactive Shiny web application that facilitat
 
 The methodology consists of three main components: Spatiotemporal Analysis, Rainfall Anomaly Detection, and Time-Series Forecasting.
 
-![](/images/RainSense.png){fig-align="center"}
+![](/images/Flowchart.png){fig-align="center"}
 
 ## Data Extraction
 
@@ -33,7 +33,7 @@ The key datasets used in this project is Meteorological Service Singapore (MSS) 
 
 ::: {#data_table .dataTable}
 | Variable | Description | Time Range & Spatial Coverage |
-|---------------------|-------------------------------------|------------------------|
+|-------------------|--------------------------------|---------------------|
 | Location | Rainfall data collected from 50-60 locations across Singapore | 2018 – Present, 62 locations |
 | Year-Month | Timestamp of the recorded data (organized by year and month) | 2018 – Present, 62 locations |
 | Total daily rainfall (mm) | Total daily rainfall, used to measure overall precipitation levels | 2018 – Present, 62 locations |
@@ -103,7 +103,7 @@ This step involves building a statistical model to predict future rainfall. This
 
 ::: {#tools .tools}
 | Package | Description |
-|---------------|---------------------------------------------------------|
+|-----------------|-------------------------------------------------------|
 | [tidyverse](https://www.tidyverse.org/) | Comprehensive data science tools for data wrangling and manipulation |
 | [lubridate](https://lubridate.tidyverse.org/) | For handling and formatting date-time data efficiently |
 | [ggplot2](https://ggplot2.tidyverse.org/) | For creating time-series and spatial visualizations |
@@ -128,3 +128,5 @@ This step involves building a statistical model to predict future rainfall. This
 :::
 
 # Project Schedule
+
+![](/images/Timeline.png){fig-align="center"}
