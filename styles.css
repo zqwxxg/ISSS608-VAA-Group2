@@ -9,19 +9,32 @@ body {
   color: white !important;
 }
 
-table {
-  border: 2px solid lightGrey;
+.dataTable {
+  font-size: 14px;
+    
+  table {
+    border: 2px solid lightGrey;
+    
+  }
   
+  th {
+      border: 2px solid lightGrey;
+  }
+  
+  td {
+      border: 2px solid lightGrey;
+  }
+  
+  tr:last-child td {
+      border-bottom: 2px solid lightGrey;
+  }
 }
 
-th {
-    border: 2px solid lightGrey;
-}
-
-td {
-    border: 2px solid lightGrey;
-}
-
-tr:last-child td {
+.tools {
+  font-size: 15px;
+  
+  th {
+    border-top: 2px solid lightGrey;
     border-bottom: 2px solid lightGrey;
+  }
 }
