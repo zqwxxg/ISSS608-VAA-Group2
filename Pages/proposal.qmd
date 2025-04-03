@@ -1,0 +1,134 @@
+---
+title: "Project Proposal"
+title-block-banner: true
+---
+
+# Motivation
+
+As a tropical island nation, Singapore experiences dynamic rainfall patterns influenced by monsoon seasons, climate change, and localized weather variations. Sudden heavy downpours can lead to urban flooding, disrupting transportation and daily life. With increasing unpredictability in weather patterns, developing data-driven predictive insights is crucial for effective climate adaptation and urban resilience.
+
+By analyzing rainfall patterns both spatially (geographic variations) and temporally (seasonal and long-term trends), we can detect anomalies, shifts, and emerging precipitation trends. Integrating time-series forecasting models further enables short-term and long-term rainfall predictions, supporting early warning systems, infrastructure planning, and climate mitigation strategies. This study aims to bridge the gap by quantifying rainfall variability and forecasting future precipitation to enhance decision-making. The insights gained will not only provide the public with more accurate weather information for better planning but also equip authorities with scientific data to improve flood warnings and emergency response measures in vulnerable areas.
+
+# Objectives
+
+This project aims to develop an interactive Shiny web application that facilitates real-time and historical analysis of rainfall patterns in Singapore while providing predictive insights for extreme rainfall events. The key objectives are as follows:
+
+1.  **Analyze Spatiotemporal Rainfall Patterns**: Identify seasonal trends and shifts in Singapore’s rainfall using temporal decomposition and change point detection. Conduct spatial analysis to detect rainfall intensity hotspots using geospatial interpolation techniques.
+
+2.  **Detect Anomalies and Extreme Rainfall Events**: Compute moving averages to visualize and quantify rainfall fluctuations. Identify unusual weather trends and deviations from historical norms.
+
+3.  **Predict Future Rainfall Trends**: Develop statistical time-series forecasting models to predict rainfall intensity. Evaluate model performance using accuracy metrics to ensure reliable forecasts.
+
+4.  **User Interaction and Alerts**: Provide an intuitive user interface that allows users to explore rainfall data and predictions for specific locations. Implement an early warning system for extreme rainfall events, enabling the public and authorities to take proactive measures in mitigating potential disruptions
+
+# Methodology
+
+The methodology consists of three main components: Spatiotemporal Analysis, Rainfall Anomaly Detection, and Time-Series Forecasting.
+
+![](/images/Flowchart.png){fig-align="center"}
+
+## Data Extraction
+
+The key datasets used in this project is Meteorological Service Singapore (MSS) – Rainfall & Weather Data. This dataset provides historical and real-time weather observations, including rainfall, temperature, and humidity levels across Singapore.
+
+::: {#data_table .dataTable}
+| Variable | Description | Time Range & Spatial Coverage |
+|----|----|----|
+| Location | Rainfall data collected from 50-60 locations across Singapore | 2018 – Present, 62 locations |
+| Year-Month | Timestamp of the recorded data (organized by year and month) | 2018 – Present, 62 locations |
+| Total daily rainfall (mm) | Total daily rainfall, used to measure overall precipitation levels | 2018 – Present, 62 locations |
+| Hourly rainfall intensity (mm/hr) | Hourly rainfall intensity, used to analyze extreme rainfall events | 2018 – Present, 62 locations |
+| Maximum 30/60/120-minute rainfall (mm) | Maximum rainfall over 30/60/120 minutes, used to detect extreme weather patterns | 2018 – Present, 62 locations |
+| Temperature (°C) | Daily temperature variations, used to analyze correlations with rainfall patterns | 2018 – Present, 62 locations |
+| Humidity (%) | Recorded humidity levels, used to study the impact of humidity on rainfall | 2018 – Present, 62 locations |
+| Wind speed (km/h) | Wind speed measurements, used to examine its relationship with rainfall patterns | 2018 – Present, 62 locations |
+| Longitude & Latitude of Rainfall Stations | Geographic coordinates of the 41 rainfall stations for spatial mapping | Static data, 41 rainfall stations |
+| Shapefile of Singapore | Geospatial vector data for spatial analysis | Nationwide |
+| Flood prone areas in Singapore | Low-lying areas with a history of flooding, used as an overlay in spatial analysis | 36 locations |
+:::
+
+## Data Pre-processing
+
+To ensure data consistency and accuracy, the collected datasets will undergo preprocessing before analysis. This process includes data cleaning, transformation, and integration of meteorological and geospatial data to prepare them for extreme rainfall prediction.
+
+1.  **Data Collection & Integration**: Historical rainfall data from 62 MSS stations will be downloaded monthly, merged, and standardized into a single structured dataset for spatial and temporal analysis.
+
+2.  **Handling Missing Values**: Short-term missing values in rainfall, temperature, humidity, and wind speed will be handled using linear interpolation, while longer gaps will be smoothed using moving averages.
+
+3.  **Time-Series Processing (Resampling & Aggregation)**: Hourly rainfall data will be aggregated into daily, monthly, and seasonal trends to detect long-term variations and rolling averages will be applied for extreme event detection.
+
+4.  **Geospatial Data Processing**: Longitude and latitude of rainfall stations will be retrieved using Google Maps & AI tools, enabling spatial interpolation (Kriging, IDW) for mapping rainfall intensity.
+
+5.  **Feature Engineering**: To enhance the predictive accuracy of rainfall models, several features will be engineered. Extreme rainfall indicators, such as maximum 30/60/120-minute rainfall intensities, will be computed to detect extreme weather patterns. Additionally, seasonal variables, including monsoon season labels (Northeast/Southwest monsoon periods) and ENSO indices (El Niño/La Niña), will be integrated to assess the impact of climate variations on rainfall trends.
+
+## Spatiotemporal Analysis
+
+This step analyzes how rainfall varies across time (seasonal and yearly changes) and space (geographical regions in Singapore).
+
+#### **Temporal Rainfall Analysis**
+
+a.  **Seasonal decomposition:**
+    -   Breaks down the rainfall time series into trend, seasonality, and residual components
+    -   Helps identify monsoon effects and periodic variations
+b.  **Change point detection:**
+    -   Identifies structural shifts in rainfall trends (e.g., increased rainfall over decades due to climate change)
+    -   Helps quantify significant changes in long-term precipitation patterns.
+
+#### **Spatial Rainfall Analysis**
+
+a.  **Kriging interpolation:**
+    -   Generates a rainfall intensity heatmap across Singapore based on the spatial distribution of precipitation.
+    -   Helps identify areas experiencing higher or lower-than-average rainfall.
+    -   Can be overlaid with flood-prone zones to assess potential risk areas.
+b.  **Clustering analysis:**
+    -   Uses machine learning, such as KMeans or DBSCAN to identify rainfall hotspots.
+    -   Groups locations experiencing similar rainfall intensities, which is useful for urban water management.
+
+## Anomaly Detection
+
+Anomaly analysis will be performed to detect unexpected rainfall patterns that may indicate extreme weather events.
+
+**Compute Moving Averages:**
+
+-   Detect long-term rainfall trends and short-term fluctuations.
+-   Identify anomalous weather patterns that deviate from expected seasonal norms.
+
+## Time-Series Forecasting
+
+This step involves building a statistical model to predict future rainfall. This step involves building a statistical model to predict future rainfall by first splitting the dataset into training and testing sets to evaluate model performance. Statistical models such as ETS, ARIMA, and SARIMA are then implemented for forecasting. The model's accuracy is assessed using metrics like Mean Absolute Error (MAE), Root Mean Square Error (RMSE), and the R² score to ensure reliable predictions. Finally, the model is used to forecast future rainfall values, which are validated against historical trends to assess predictive accuracy.
+
+# Prototype
+
+![](/images/prototype.jpg){fig-align="center"}
+
+# Packages
+
+::: {#tools .tools}
+| Package | Description |
+|----|----|
+| [tidyverse](https://www.tidyverse.org/) | Comprehensive data science tools for data wrangling and manipulation |
+| [lubridate](https://lubridate.tidyverse.org/) | For handling and formatting date-time data efficiently |
+| [ggplot2](https://ggplot2.tidyverse.org/) | For creating time-series and spatial visualizations |
+| [leaflet](https://rstudio.github.io/leaflet/) | For interactive mapping of rainfall intensity |
+| [plotly](https://plotly.com/r/) | For interactive data exploration and dynamic graphs |
+| [scales](https://scales.r-lib.org/) | For formatting scales in ggplot visualizations |
+| [changepoint](https://lindeloev.github.io/mcp/articles/packages.html) | For detecting shifts in rainfall patterns over time |
+| [cluster](https://www.rdocumentation.org/packages/cluster/versions/2.1.8) | For K-Means clustering analysis |
+| [dbscan](https://cran.r-project.org/web/packages/dbscan/readme/README.html) | For DBSCAN clustering analysis |
+| [factoextra](https://rpkgs.datanovia.com/factoextra/) | For clustering visualization |
+| [sf](https://r-spatial.github.io/sf/) | For handling geospatial data |
+| [sp](https://www.rdocumentation.org/packages/sp/versions/2.2-0) | For spatial analysis, used in combination with rastert and gstat |
+| [raster](https://rspatial.org/raster/pkg/index.html) | For handling gridded rainfall data |
+| [gstat](https://www.rdocumentation.org/packages/gstat/versions/2.1-3/topics/gstat) | For Kriging interpolation |
+| [fable](https://fable.tidyverts.org/) | For classical time-series forecasting models (ARIMA, SARIMA) |
+| [tsibble](https://cran.rstudio.com/web/packages/tsibble/vignettes/intro-tsibble.html) | For handling temporal data |
+| [feasts](https://cran.r-project.org/web/packages/feasts/vignettes/feasts.html) | For extracting features and statistics for time-series |
+| [prophet](https://facebook.github.io/prophet/) | For flexible trend-based forecasting |
+| [shiny](https://shiny.posit.co/r/getstarted/shiny-basics/lesson1/) | For developing the interactive web application |
+| [shinyWidgets](https://dreamrs.github.io/shinyWidgets/reference/shinyWidgets.html) | For enhanced UI components in Shiny |
+| [shinyjs](https://deanattali.com/shinyjs/) | For executing JavaScript code to enable/disable Shiny inputs dynamically |
+:::
+
+# Project Schedule
+
+![](/images/Timeline.png){fig-align="center"}

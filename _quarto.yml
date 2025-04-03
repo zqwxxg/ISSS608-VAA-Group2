@@ -7,8 +7,8 @@ website:
   navbar:
     background: "#134178"
     foreground: white
-    left:
-      - href: "Pages/Proposal/proposal.html"
+    right:
+      - href: "Pages/proposal.html"
         text: PROPOSAL
 
 format:

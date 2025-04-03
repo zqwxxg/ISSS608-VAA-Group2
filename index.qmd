@@ -1,5 +1,5 @@
 ---
-title: "Spatiotemporal Rainfall Variability and Time-Series Forecasting for Rainfall Prediction in Singapore"
+title: "Rainfall Variability and Forecasting in Singapore"
 ---
 
 ![](images/logo.png){fig-align="center"}
