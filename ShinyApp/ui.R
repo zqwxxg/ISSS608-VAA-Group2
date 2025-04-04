@@ -1,7 +1,9 @@
 library(shiny)
 library(shinyjs)
-library(bslib)
+library(shinyWidgets)
+library(plotly)
 library(tmap)
+library(bslib)
 
 ### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
 ### Colors                                                                  ####
@@ -14,32 +16,109 @@ library(tmap)
 #96816d brown
 
 my_theme <- bs_theme(
-  version = 5,                   # Bootstrap 5
-  bootswatch = "flatly",         # Preset theme
-  bg = "#f0f5fa",                # Background color
-  fg = "#134178",                # Foreground (text) color
-  primary = "#071f4d",           # Primary color (nav links, active tabs)
-  secondary = "#96816d",         # Secondary (accents, cards)
-  success = "#B2B2B2",           # Custom success color (maybe for neutral feel)
+  version = 5,                   
+  bootswatch = "flatly",         
+  bg = "#f0f5fa",                
+  fg = "#134178",                
+  primary = "#071f4d",           
+  secondary = "#96816d",         
+  success = "#B2B2B2",           
   
   base_font = font_google("Raleway"),       # Body text
   heading_font = font_google("Montserrat")  # Headings
 )
 
-interpolation_sidebar <- function() {
+anova_sidebar <- function() {
+  div(
+    selectInput("anova_station", "Select Station:", choices = NULL),
+    airYearpickerInput(
+      inputId = "anova_year",
+      label = "Select Year:",
+      minDate = "2018",
+      maxDate = "2024",
+      view = "years",
+      dateFormat = "yyyy",
+      autoClose = TRUE
+    ),
+    actionButton("run_anova", "Run ANOVA", icon = icon("chart-bar"), class = "btn-primary", style = "width:100%")
+  )
+}
+
+poisson_sidebar <- function() {
+  div(
+    selectInput("poisson_station", "Select Station:", choices = NULL),
+    actionButton("run_poisson", "Run Poisson", icon = icon("chart-bar"), class = "btn-primary", style = "width:100%")
+  )
+}
+
+kriging_sidebar <- function() {
   div(
   
     radioButtons(
-      inputId = "interpolation-granularity",
+      inputId = "kriging-granularity",
       label = "Select Granularity:",
       choices = c("Daily", "Monthly", "Yearly"),
       selected = "Monthly",
       inline = TRUE
     ),
     
-    uiOutput("interpolation-date_picker"),
+    uiOutput("kriging-date_picker"),
     
-    actionButton("submit_interpolation", "Submit", icon = icon("cloud-rain"), class = "btn-primary", style = "width: 100%")
+    actionButton("submit_kriging", "Submit", icon = icon("cloud-rain"), class = "btn-primary", style = "width: 100%")
+  )
+}
+
+idw_sidebar <- function() {
+  div(
+    
+    radioButtons(
+      inputId = "idw-granularity",
+      label = "Select Granularity:",
+      choices = c("Daily", "Monthly", "Yearly"),
+      selected = "Monthly",
+      inline = TRUE
+    ),
+    
+    uiOutput("idw-date_picker"),
+    
+    numericInput("idw_nmax", "Maximum Neighbors (nmax):", value = 5, min = 3, max = 15),
+    numericInput("idw_idp", "Inverse Distance Power (idp):", value = 0, min = 0, max = 2, step = 0.1),
+    
+    actionButton("submit_idw", "Submit", icon = icon("cloud-rain"), class = "btn-primary", style = "width: 100%")
+  )
+}
+
+
+clustering_sidebar <- function() {
+  div(
+    
+    selectInput("clust_type", "Clustering Type:",
+                choices = c("partitional", "hierarchical", "fuzzy")),
+    
+    selectInput("clust_distance", "Distance Measure:",
+                choices = c("dtw_basic", "softdtw", "sbd", "euclidean", "gak")),
+    
+    h6("Centroid Method:"),
+    verbatimTextOutput("clust_centroid_text"),
+    
+    sliderInput("num_clusters", "Number of Clusters:",
+                min = 2, max = 5, value = 2),
+    
+    actionButton("run_clustering", "Run Clustering", icon = icon("project-diagram"), class = "btn-primary", style = "width: 100%")
+  )
+}
+
+forecasting_sidebar <- function() {
+  div(
+    airDatepickerInput(
+      inputId = "forecast_date",
+      label = "Select Date:",
+      minDate = "2018-01-01",
+      maxDate = "2025-12-31",
+      dateFormat = "yyyy-MM-dd",
+      autoClose = TRUE
+    ),
+    actionButton("run_forecast", "View Forecast", icon = icon("cloud-sun-rain"), class = "btn-primary", style = "width:100%")
   )
 }
 
@@ -77,11 +156,46 @@ ui <- (
                         ),
 
                       div(
-                        # tmapOutput("station_map")
+                        tmapOutput("station_map")
                         )
                       )
                     )
                 ),
+              
+              # ---------- Confirmatory Analysis Tab ----------
+              nav_panel(
+                title = "Confirmatory Analysis",
+                id = "cda_panel",
+                navset_card_tab(
+                  nav_panel(
+                    "ANOVA",
+                    page_fillable(
+                      layout_sidebar(
+                        sidebar = anova_sidebar(),
+                        div(
+                          plotlyOutput("anova_plot"),
+                          br(),
+                          textOutput("anova_summary")
+                        )
+                      )
+                    )
+                  ),
+                  
+                  nav_panel(
+                    "Poisson",
+                    page_fillable(
+                      layout_sidebar(
+                        sidebar = poisson_sidebar(),
+                        div(
+                          plotlyOutput("poisson_plot"),
+                          br(),
+                          htmlOutput("poisson_summary")
+                        )
+                      )
+                    )
+                  )
+                )
+              ),
               
               # ---------- Spatial Analysis Tab ----------
               nav_panel(
@@ -89,91 +203,55 @@ ui <- (
                 id = "spatial_panel",
                 navset_card_tab(
                   nav_panel(
-                  "Interpolation",
+                  "Ordinary Kriging",
                   page_fillable(
                     layout_sidebar(
-                      sidebar = interpolation_sidebar(),
-                      tmapOutput("rain_map"),
+                      sidebar = kriging_sidebar(),
+                      uiOutput("kriging_results")
                     ))
                   ),
 
                   nav_panel(
-                  "Clustering", "test")
+                  "IDW Interpolation",
+                  page_fillable(
+                    layout_sidebar(
+                      sidebar = idw_sidebar(),
+                      uiOutput("idw_results")
+                      )
+                    )
+                  )
+                  )
+                ),
+              
+              # ---------- Forecasting Panel ----------
+              nav_panel(
+                title = "Clustering",
+                id = "clustering_panel",
+                page_fillable(
+                  layout_sidebar(
+                    sidebar = clustering_sidebar(),
+                    uiOutput("clustering_results")
+                  )
+                )
+              ),
+              
+              # ---------- Forecasting Panel ----------
+              nav_panel(
+                title = "Forecasting",
+                id = "forecasting_panel",
+                navset_card_tab(
+                  nav_panel(
+                    "Forecasting",
+                    page_fillable(
+                      layout_sidebar(
+                        sidebar = forecasting_sidebar(),
+                        uiOutput("forecasting_results")
+                      )
+                    )
                   )
                 )
               )
-)
-# ui <- (
-#   navbarPage(title = "RainSense",
-#              fluid = TRUE,
-#              collapsible = TRUE,
-#              header = tags$head (
-#                tags$script(HTML("$(document).on('click', '#toggleSidebar', function () {$('.custom-sidebar').toggleClass('collapsed');});"))
-#                ),
-#              theme = "styles.css",
-#                    
-#              # ----------------------------------
-#              # tab panel 1 - Home
-#              tabPanel("Home",
-#                       div(class = "landing-section",
-#                           div(style = "padding-bottom: 30px;",
-#                             fluidRow(
-#                               column(12,
-#                                      h1("Welcome to RainSense"),
-#                                      p("RainSense is an interactive platform designed to help you explore rainfall variability and forecasting patterns across Singapore. Dive into our visual and analytical tools to uncover insights from historical and projected rainfall data.")
-#                                      )
-#                               )
-#                             ),
-#                           fluidRow(
-#                             column(6,
-#                                    p(tags$b("Confirmatory Analysis"),
-#                                      "Compare daily rainfall across different monsoon seasons and uncover trends in extreme rainfall events through statistical analysis."
-#                                    ),
-#                                    
-#                                    br(),
-#                                    
-#                                    p(tags$b("Spatial Analysis: "),
-#                                      "Visualize rainfall distribution across regions and identify spatial patterns that may influence flood risks or drought zones."
-#                                    ),
-#                                    
-#                                    br(),
-#                                    
-#                                    p(tags$b("Forecasting: "),
-#                                      "Detect rainfall anomalies and generate future rainfall forecasts using data-driven models, helping you anticipate wet or dry periods ahead of time."
-#                                    )
-#                                    ),
-#                             # column(6,
-#                             #        tmapOutput("station_map")
-#                             #        )
-#                             )
-#                           )
-#                       ),
-#              
-#              # ----------------------------------
-#              # tab panel 3 - Spatial Analysis
-#              tabPanel("Spatial Analysis",
-#                       div(class = "page-container",
-#                           fluidRow(
-#                             column(3,
-#                                    div(id = "sidebar", class = "custom-sidebar",
-#                                        # Toggle button at the top of the sidebar
-#                                        tags$button(id = "toggleSidebar", class = "toggle-btn", icon("bars")),
-#                                        tags$div(id = "sidebarContent",
-#                                                 h4("Rainfall Analysis"),
-#                                                 selectInput("granularity", "Select Granularity:", choices = c("Monthly", "Daily")),
-#                                                 uiOutput("date_selector")
-#                                        )
-#                                    )
-#                             )
-#                           )
-#                             
-#                           
-#                        #??? Main map output
-#                        # column(9,
-#                        #   tmapOutput("rain_map", height = "700px")
-#                        #   )
-#                        )
-#                       )
-#              )
-# )
+              
+              )
+  )
   

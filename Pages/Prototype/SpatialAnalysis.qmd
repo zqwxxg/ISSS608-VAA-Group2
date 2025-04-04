@@ -101,16 +101,36 @@ weather$Status <- ifelse(weather$Station %in% active_stations$Station.Name, "Act
 ```
 
 ```{r}
+weather_sf <- st_as_sf(weather, 
+                      coords = c("Longitude",
+                                 "Latitude"),
+                      crs= 4326) %>%
+  st_transform(crs = 3414)
+```
+
+```{r}
 rf_data <- weather %>%
   mutate(MonthYear = floor_date(Date, "month")) %>%
   group_by(Station, MonthYear) %>%
-  mutate(MonthYear = yearmonth(MonthYear)) %>%
+  # mutate(MonthYear = yearmonth(MonthYear)) %>%
   summarise(
     MonthlyRain = sum(Daily.Rainfall.Total..mm., na.rm = TRUE),
     Latitude = first(Latitude),
     Longitude = first(Longitude),
     .groups = "drop"
   )
+```
+
+```{r}
+rf_data <- weather %>%
+  mutate(Year = year(Date)) %>%
+  group_by(Station, Year) %>%
+  summarise(
+    YearlyRain = sum(Daily.Rainfall.Total..mm., na.rm = TRUE),
+    Latitude = first(Latitude),
+    Longitude = first(Longitude),
+    .groups = "drop"
+    )
 ```
 
 To ensure proper spatial referencing, the Coordinate Reference System (CRS) is initially set to EPSG:4326, which uses the WGS 84 standard - commonly used for global positioning and representing geographic coordinates in degrees. Subsequently, the spatial object is transformed to EPSG:3414, also known as SVY21 / Singapore TM, a projected coordinate system specifically designed for mapping within Singapore. Unlike WGS 84, SVY21 expresses coordinates in meters, making it more suitable for accurate distance measurements, spatial interpolation, and localized mapping within the Singapore context.
@@ -128,14 +148,6 @@ The Singapore boundary shapefile is imported and similarly transformed to the EP
 ```{r}
 sg_boundary <- st_read(dsn = "data/geospatial", 
                     layer = "MPSZ-2019") %>%
-  st_transform(crs = 3414)
-```
-
-```{r}
-weather_sf <- st_as_sf(weather, 
-                      coords = c("Longitude",
-                                 "Latitude"),
-                      crs= 4326) %>%
   st_transform(crs = 3414)
 ```
 

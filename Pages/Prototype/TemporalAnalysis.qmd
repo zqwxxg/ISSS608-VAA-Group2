@@ -258,8 +258,15 @@ The analysis begins by aggregating the data to compute monthly rainfall totals, 
 clust_data <- weather_active %>%
   mutate(MonthYear = floor_date(Date, "month")) %>%
   group_by(Station, MonthYear) %>%
-  mutate(MonthYear = yearmonth(MonthYear)) %>%
+  # mutate(MonthYear = yearmonth(MonthYear)) %>%
   summarise(MonthlyRain = sum(Daily.Rainfall.Total..mm.))
+```
+
+```{r}
+clust_data <- weather_active %>%
+  mutate(Year = year(Date)) %>%
+  group_by(Station, Year) %>%
+  summarise(YearlyRain = sum(Daily.Rainfall.Total..mm.))
 ```
 
 Since the subsequent time series clustering requires a list of numeric vectors, with each element representing a time series (e.g., monthly rainfall for a specific station), the data is first reshaped into wide format, where each station forms a separate column.
@@ -269,6 +276,14 @@ clust_data <- clust_data %>%
   pivot_wider(
     names_from = Station,
     values_from = MonthlyRain
+  )
+```
+
+```{r}
+clust_data <- clust_data %>%
+  pivot_wider(
+    names_from = Station,
+    values_from = YearlyRain
   )
 ```
 
@@ -282,11 +297,26 @@ clust_data <- clust_data %>%
   ))
 ```
 
+```{r}
+clust_data <- clust_data %>%
+  mutate(across(
+    -Year,
+    ~ na_interpolation(.x)
+  ))
+```
+
 Once interpolation is complete, the data is then converted into list format, preparing it for input into time series clustering algorithms.
 
 ```{r}
 rain_list <- clust_data %>%
   select(-MonthYear) %>%
+  as.list() %>%
+  lapply(as.numeric)
+```
+
+```{r}
+rain_list <- clust_data %>%
+  select(-Year) %>%
   as.list() %>%
   lapply(as.numeric)
 ```
@@ -337,7 +367,7 @@ There is a notable drop in total within-cluster distance from k = 2 to k = 4, su
 The clustering model is then fitted, and its performance is assessed using the silhouette score.
 
 ```{r}
-model1 <- tsclust(rain_list, type = "partitional", k = 3,
+model1 <- tsclust(rain_list, type = "partitional", k = 2,
                   distance = "dtw_basic",
                   centroid = "dba",
                   seed = 123)
@@ -415,7 +445,7 @@ Since the SBD-based clustering model yielded a higher silhouette score, it is se
 ```{r}
 station_clusters <- data.frame(
   Station = names(rain_list),
-  Cluster = as.factor(model2@cluster)
+  Cluster = as.factor(model1@cluster)
 )
 ```
 
@@ -425,9 +455,21 @@ Next, the monthly rainfall totals for active stations are computed while preserv
 c_rf_data <- weather_active %>%
   mutate(MonthYear = floor_date(Date, "month")) %>%
   group_by(Station, MonthYear) %>%
-  mutate(MonthYear = yearmonth(MonthYear)) %>%
+  # mutate(MonthYear = yearmonth(MonthYear)) %>%
   summarise(
     MonthlyRain = sum(Daily.Rainfall.Total..mm.),
+    Latitude = first(Latitude),
+    Longitude = first(Longitude),
+    .groups = "drop"
+  )
+```
+
+```{r}
+c_rf_data <- weather_active %>%
+  mutate(Year = year(Date)) %>%
+  group_by(Station, Year) %>%
+  summarise(
+    YearlyRain = sum(Daily.Rainfall.Total..mm.),
     Latitude = first(Latitude),
     Longitude = first(Longitude),
     .groups = "drop"
@@ -472,7 +514,9 @@ tm_shape(sg_boundary) +
     col = "Cluster",
     palette = "Set2",
     size = 0.4,
-    title.col = "Cluster"
+    title.col = "Cluster",
+    popup.vars = "Station",
+    interactive = TRUE
   ) +
   tm_layout(
     title = "Time Series Clusters of Monthly Rainfall (by Station)",
@@ -489,3 +533,41 @@ From the spatial distribution, we can interpret that:
 
 -   Cluster 1 (green) stations are more common in the western and northwestern regions, including some in the southwest. These stations likely exhibit more variable or intense rainfall patterns, as inferred from earlier cluster analysis.
 -   Cluster 2 (orange) stations are widely distributed across central, eastern, and northeastern Singapore, particularly concentrated in more urban or coastal regions. This suggests these stations experience more consistent or stable rainfall behavior over time.
+
+```{r}
+weather_active <- weather %>%
+  filter(Station %in% active_stations$Station.Name)
+
+weather_active <- weather_active %>%
+  select(Station, Year, Month, Day, Daily.Rainfall.Total..mm.) %>%
+  filter(!is.na(Daily.Rainfall.Total..mm.)) %>%
+  merge(active_stations, by.x = "Station", by.y = "Station.Name") %>%
+  select(Station, Year, Month, Day, Daily.Rainfall.Total..mm., Latitude, Longitude) %>%
+  mutate(Date = make_date(Year, Month, Day), Station = as.factor(Station)) %>%
+  mutate(Season = case_when(
+      Month %in% c(12, 1, 2) | (Month == 3 & Day <= 15) ~ "Northeast Monsoon",
+      (Month == 3 & Day > 15) | Month %in% c(4, 5) ~ "Inter-monsoon I",
+      Month %in% c(6, 7, 8, 9) ~ "Southwest Monsoon",
+      Month %in% c(10, 11) ~ "Inter-monsoon II",
+      TRUE ~ "Unknown"
+    ),
+    Season = factor(Season, levels = c("Northeast Monsoon", "Inter-monsoon I", "Southwest Monsoon", "Inter-monsoon II"))
+  ) %>%
+  arrange(Station, Date)
+```
+
+```{r}
+specific_anova_data <- weather_active %>%
+  filter(Station == "Bukit Panjang", Year == year("2020-01-01"))
+```
+
+```{r}
+      specific_poisson_data <- weather_active %>%
+        filter(Station == "Pasir Ris Central", Daily.Rainfall.Total..mm. > 100) %>%
+        count(Year) %>%
+        mutate(Year = as.integer(Year))
+```
+
+```{r}
+sd(specific_poisson_data$Year)
+```
