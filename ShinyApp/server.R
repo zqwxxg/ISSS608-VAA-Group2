@@ -1,3 +1,5 @@
+library(jsonify)
+library(jsonlite)
 library(shiny)
 library(shinyWidgets)
 library(lubridate)
@@ -12,10 +14,16 @@ library(gstat)
 library(automap)
 library(viridis)
 library(dtwclust)
+library(feasts)
+library(fable)
+library(seasonal)
+
+tmap_mode("view")
 
 # ----------------------------------
 # CDA Data
 
+weather <- read.csv("data/weather.csv")
 weather_active <- read.csv("data/weather_active.csv")
 weather_active$Date <- as.Date(weather_active$Date)
 weather_active$Daily.Rainfall.Total..mm. <- as.numeric(weather_active$Daily.Rainfall.Total..mm.)
@@ -41,6 +49,11 @@ monthly_active_data_sf <- readRDS("data/monthly_active_data_sf.rds")
 rain_list <- readRDS("data/rain_list.rds")
 
 # ----------------------------------
+# Decomposition data
+
+tsibble_data <- readRDS("data/tsibble_data.rds")
+
+# ----------------------------------
 # Forecasting data
 
 weather_predicted_sf <- readRDS("data/weather_predicted_sf.rds")
@@ -52,23 +65,28 @@ server <- function(input, output, session) {
   
     # ----------------------------------
     # Home station map
-
+  
+    output$weather_table <- DT::renderDataTable({
+      DT::datatable(
+        weather,
+        options = list(pageLength = 5, scrollX = TRUE),
+        rownames = FALSE
+      )
+    })
+  
     output$station_map <- renderTmap({
-      tm_check_fix()
-      tmap_mode("view")
-      
       tm_shape(weather_sf) +
         tm_symbols(
-          col = "Status",
-          palette = c("Active" = "#00b050", "Inactive" = "#ff4d4d"),
-          size = 0.6,
-          scale = 1,
-          title.col = "Status",
-          popup.vars = "Station",
+          col = "Status",  
+          col.scale = tm_scale(c("Active" = "#00b050","Inactive" = "#ff4d4d")),
+          col.legend = tm_legend("Status"),
+          size = 0.7,
+          size.scale = tm_scale(1),
+          popup.vars = c("Station"),
           interactive = TRUE
         ) +
         tm_title("Weather Station Map") +
-        tm_view(basemaps = "Esri.WorldTopoMap")
+        tm_view(basemap.server = "Esri.WorldTopoMap")
     })
     
     # ----------------------------------
@@ -110,8 +128,10 @@ server <- function(input, output, session) {
             )
           })
           
-          output$anova_summary <- renderText({
-            paste("No data available for", selected_station, "in", year(selected_year))
+          output$anova_summary <- renderUI({
+            HTML(paste("<div style='color:black;'>",
+                       "No data available for", selected_station, "in", year(selected_year),
+                       "</div>"))
           })
           
           return()  # Exit the observeEvent early
@@ -136,7 +156,7 @@ server <- function(input, output, session) {
           ggplotly(p)
         })
         
-        output$anova_summary <- renderText({
+        output$anova_summary <- renderUI({
           means <- specific_anova_data %>%
             group_by(Season) %>%
             summarise(Mean = mean(Daily.Rainfall.Total..mm., na.rm = TRUE)) %>%
@@ -145,12 +165,13 @@ server <- function(input, output, session) {
           top_season <- means$Season[1]
           top_value <- round(means$Mean[1], 2)
           
-          paste0(
-            "In ", selected_year, ", at ", selected_station, ", the rainfall patterns across seasons showed distinct differences. ",
-            "The highest average daily rainfall was recorded during the ", top_season,
-            " with approximately ", top_value, " mm. ",
-            "This CDA (Comparative Data Analysis) module visually compares seasonal rainfall patterns and tests their significance."
-          )
+          HTML(paste0(
+            "<div style='color:black;'>",
+            "In <b>", selected_year, "</b>, at <b>", selected_station, "</b>, the rainfall patterns across seasons showed distinct differences. ",
+            "The highest average daily rainfall was recorded during the <b>", top_season, "</b> season, with approximately <b>", top_value, " mm</b>.<br><br>",
+            "This CDA module visually compares seasonal rainfall patterns and tests their significance.",
+            "</div>"
+          ))
         })
       })
     })
@@ -185,7 +206,9 @@ server <- function(input, output, session) {
           })
           
           output$poisson_summary <- renderUI({
-            paste("No extreme rainfall data available for", selected_station)
+            HTML(paste("<div style='color:black;'>",
+                       "No extreme rainfall data available for", selected_station,
+                       "</div>"))
           })
           
           return()
@@ -213,6 +236,7 @@ server <- function(input, output, session) {
         
         output$poisson_summary <- renderUI({
           HTML(paste0(
+            "<div style='color:black;'>",
             "Poisson regression results for extreme rainfall days at <b>", selected_station, "</b>:<br>",
             "Trend coefficient: ", beta, "<br>",
             "p-value: ", pval, "<br>",
@@ -220,7 +244,8 @@ server <- function(input, output, session) {
               "<b>There is a statistically significant trend</b> in extreme rainfall days over the years."
             } else {
               "<b>There is no statistically significant trend</b> in extreme rainfall days over the years."
-            }
+            },
+            "</div>"
           )
           )
         })
@@ -417,10 +442,10 @@ server <- function(input, output, session) {
     
     output$kriging_summary <- renderUI({
       HTML(paste0(
-        "<div style='font-size:16px;'>",
+        "<div style='color:black;'>",
         "This map uses <b>Ordinary Kriging</b> to visualize the spatial distribution of total rainfall. ",
         "Ordinary Kriging is a geostatistical method that estimates rainfall in unmeasured areas based on known station data and their spatial relationships. ",
-        "Darker areas indicate regions with higher estimated rainfall, while lighter areas suggest lower rainfall.",
+        "<b>Darker areas</b> indicate regions with higher estimated rainfall, while <b>lighter areas</b> suggest lower rainfall.",
         "</div>"
       ))
     })
@@ -432,7 +457,7 @@ server <- function(input, output, session) {
     
     output$variogram_summary <- renderUI({
       HTML(paste0(
-        "<div style='font-size:16px;'>",
+        "<div style='color:black;'>",
         "The variogram helps determine how spatially correlated rainfall values are over distance.",
         "A good fit improves the accuracy of spatial predictions.<br><br>",
         "Model Parameters:<br>",
@@ -449,20 +474,17 @@ server <- function(input, output, session) {
       req(v_auto_result)
       
       div(
-        h4("Ordinary Kringing Map"),
+        h4(tags$b("Ordinary Kringing Map")),
         plotOutput("rain_map"),
-        
         br(),
-
         htmlOutput("kriging_summary"),
         
         br(),
-        
-        h4("Autofitted Variogram"),
-        plotOutput("v_auto_plot"),
-        
         br(),
         
+        h4(tags$b("Autofitted Variogram")),
+        plotOutput("v_auto_plot"),
+        br(),
         htmlOutput("variogram_summary")
       )
       })
@@ -641,7 +663,6 @@ server <- function(input, output, session) {
       
       map <- tm_shape(idw_map_result()) +
         tm_raster(
-          col.scale = tm_scale_continuous(values = "brewer.blues"),
           col.legend = tm_legend(title = "Total rainfall (mm)")
         ) +
         tm_title(text = paste("Rainfall Distribution in", title_date)) +
@@ -655,8 +676,8 @@ server <- function(input, output, session) {
     
     output$idw_summary <- renderUI({
       HTML(paste0(
-        "<div style='font-size:16px;'>",
-        "This map uses <b>Inverse Distance Weighting (IDW)</b> to estimate rainfall based on surrounding weather stations.",
+        "<div style='color:black;'>",
+        "This map uses <b>Inverse Distance Weighting (IDW)</b> to estimate rainfall based on surrounding weather stations. ",
         "IDW assumes that rainfall at unknown locations is more influenced by nearby stations than distant ones.<br><br>",
         "<b>nmax</b>: The maximum number of neighboring stations considered for each prediction.<br>",
         "Higher values use more stations (smoother results), while lower values make estimates more localized.<br><br>",
@@ -670,11 +691,9 @@ server <- function(input, output, session) {
       req(idw_map_result())
       
       div(
-        h4("IDW Interpolation Map"),
+        h4(tags$b("IDW Interpolation Map")),
         plotOutput("idw_map"),
-        
         br(),
-
         htmlOutput("idw_summary")
       )
     })
@@ -738,25 +757,24 @@ server <- function(input, output, session) {
         
         tmap_mode("view")
         
-        # Map
         map <- tm_shape(sg_boundary) +
             tm_polygons(col = "grey90", border.col = "white") +
             tm_shape(clustered_stations) +
             tm_symbols(
               col = "Cluster",
               palette = "hcl.set2",
-              size = 0.6,
-              scale = 1,
-              title.col = "Cluster",
+              size = 0.7,
+              size.scale = tm_scale(1),
+              col.legend = tm_legend("Cluster"),
               popup.vars = "Station",
               interactive = TRUE
             ) +
             tm_layout(
-              title = "Time Series Clusters by Station",
               legend.outside = TRUE,
               frame = FALSE
             ) +
-            tm_view(basemaps = "Esri.WorldTopoMap")
+          tm_title("Time Series Clusters by Station") +
+          tm_view(basemap.server = "Esri.WorldTopoMap")
         
         cluster_map_result(map)
       })
@@ -767,60 +785,194 @@ server <- function(input, output, session) {
       cluster_map_result()
       })
     
+    output$cluster_map_description <- renderUI({
+      HTML(paste0(
+        "<div style='color:black;'>",
+        "This map shows the geographical distribution of weather stations grouped by their time series similarity. ",
+        "Each color represents a distinct cluster of stations with similar rainfall patterns over time. ",
+        "<i>To understand the behavior of each cluster, refer to the Clustered Series Plot below.</i>",
+        "</div>"
+      ))
+    })
+    
     output$series_plot <- renderPlot({
       req(cluster_model())
       plot(cluster_model(), type = "series")
       })
+    
+    output$series_plot_description <- renderUI({
+      HTML(paste0(
+        "<div style='color:black;'>",
+        "This panel shows the rainfall time series for each station, grouped by cluster. ",
+        "Each cluster is displayed in a separate panel, where each colored line represents the rainfall pattern of a station over time.<br><br>",
+        "<b>How to interpret:</b><br>",
+        "- Clusters with <b>densely packed lines</b> indicate high similarity in temporal behavior among stations.<br>",
+        "- Clusters with <b>more spread out lines</b> suggest greater variability within the group.<br>",
+        "- Look for seasonal spikes or stable patterns that characterize the nature of each cluster.",
+        "</div>"
+      ))
+    })
     
     output$metrics <- renderPrint({
       req(cluster_model())
       cvi(cluster_model(), type = "internal")
       })
     
+    output$metrics_description <- renderUI({
+      HTML(paste0(
+        "<div style='color:black;'>",
+        "These metrics assess the quality of the clustering results.<br>",
+        "<ul>",
+        "<li><b>Sil:</b> Silhouette score - higher values indicate better-defined clusters.</li>",
+        "<li><b>CH:</b> Calinski-Harabasz Index - higher is better.</li>",
+        "<li><b>DB:</b> Davies-Bouldin Index - lower is better.</li>",
+        "<li><b>SF, D, COP, etc.:</b> Additional indices to evaluate compactness and separation.</li>",
+        "</ul>",
+        "</div>"
+      ))
+    })
+    
     output$clustering_results <- renderUI({
       req(cluster_map_result())
       
       div(
-        h4("Spatial Cluster Map"),
+        h4(tags$b("Spatial Cluster Map")),
         tmapOutput("cluster_map"),
+        br(),
+        htmlOutput("cluster_map_description"),
         
         br(),
+        br(),
         
-        h5("Clustered Series Plot"),
+        h4(tags$b("Clustered Series Plot")),
         plotOutput("series_plot"),
+        br(),
+        htmlOutput("series_plot_description"),
         
         br(),
+        br(),
         
-        h5("Evaluation Metrics"),
-        verbatimTextOutput("metrics")
+        h4(tags$b("Evaluation Metrics")),
+        verbatimTextOutput("metrics"),
+        htmlOutput("metrics_description")
       )
     })
     
     # ----------------------------------
-    # Forecasting
+    # Decomposition
     
+    observe({
+      updateSelectInput(inputId = "decomp_station", choices = unique(tsibble_data$Station))
+    })
+    
+    ts_plot_result <- reactiveVal()
+    stl_plot_result <- reactiveVal()
+    
+    observeEvent(input$run_decomposition, {
+      withProgress(message = "Running...", value = 0.1, {
+        req(input$decomp_station)
+        
+        station_name <- input$decomp_station
+        
+        Sys.sleep(0.3)
+        incProgress(0.4, detail = "Plotting...")
+        
+        ts_plot <- tsibble_data %>%
+          filter(Station == station_name) %>%
+          gg_tsdisplay(MonthlyRain) +
+          labs(title = paste("Monthly Rainfall in", station_name))
+        
+        ts_plot_result(ts_plot)
+        
+        stl_plot <- tsibble_data %>%
+          filter(Station == station_name) %>%
+          model(stl = STL(MonthlyRain)) %>%
+          components() %>%
+          autoplot() +
+          labs(title = paste("STL Decomposition for", station_name))
+        
+        stl_plot_result(stl_plot)
+      })
+    })
+    
+    output$ts_decomp_plot <- renderPlot({
+      req(ts_plot_result())
+      ts_plot_result()
+    })
+    
+    output$ts_description <- renderUI({
+      HTML(paste0(
+        "<div style='color:black;'>",
+        "The top panel shows the raw monthly rainfall values for the selected station over time. ",
+        "Below that, the <b>ACF (Autocorrelation Function)</b> plot indicates how strongly rainfall values are correlated with past months - helping detect repeating cycles or persistence in rainfall patterns. ",
+        "The bottom-right plot compares seasonal rainfall trends by month across different years. Each line represents a year, helping identify months with consistently higher or lower rainfall. ",
+        "<i>Use this visualization to spot general trends, seasonality, and year-to-year variation.</i>",
+        "</div>"
+      ))
+    })
+    
+    output$stl_decomp_plot <- renderPlot({
+      req(stl_plot_result())
+      stl_plot_result()
+    })
+    
+    output$stl_description <- renderUI({
+      HTML(paste0(
+        "<div style='color:black;'>",
+        "This chart breaks the rainfall time series into three additive components using STL (Seasonal-Trend decomposition using Loess):<br>",
+        "<ul style='margin-top: 0.5rem; margin-bottom: 0.5rem;'>",
+        "<li><b>Trend:</b> Long-term direction of rainfall (e.g., increasing, stable, or decreasing over years).</li>",
+        "<li><b>Seasonal:</b> Repeating monthly or annual patterns, such as monsoon seasons.</li>",
+        "<li><b>Remainder:</b> Irregular fluctuations that aren't explained by trend or seasonality - often noise or anomalies.</li>",
+        "</ul>",
+        "This decomposition helps you identify meaningful patterns and isolate unusual rainfall behavior at the selected station.",
+        "</div>"
+      ))
+    })
+    
+    output$decomp_results <- renderUI({
+      req(ts_plot_result())
+      req(stl_plot_result())
+      
+      div(
+        h4(tags$b("Time Series Decomposition")),
+        plotOutput("ts_decomp_plot"),
+        br(),
+        htmlOutput("ts_description"),
+        
+        br(),
+        br(),
+        
+        h4(tags$b("STL Decomposition")),
+        plotOutput("stl_decomp_plot"),
+        br(),
+        htmlOutput("stl_description")
+      )
+    })
+    
+    
+    # Forecasting
     forecast_map_result <- reactiveVal()
     
     observeEvent(input$run_forecast, {
-      selected_date <- as.Date(input$forecast_date)
-      
-      req(selected_date)
-      
-      forecast_data <- weather_predicted_sf %>%
-        filter(Date == selected_date)
-      
-      print(forecast_data$Date)
-      
-      # Z-score anomaly detection
-      mean_rain <- mean(forecast_data$Daily.Rainfall.Total..mm., na.rm = TRUE)
-      sd_rain <- sd(forecast_data$Daily.Rainfall.Total..mm., na.rm = TRUE)
-      
-      forecast_data <- forecast_data %>%
-        mutate(
-          z_score = (Daily.Rainfall.Total..mm. - mean_rain) / sd_rain,
-          is_anomaly = abs(z_score) > 2
-        )
-      
+      withProgress(message = "Forecasting...", value = 0.1, {
+        req(input$forecast_date)
+        
+        selected_date <- as.Date(input$forecast_date)
+        
+        forecast_data <- weather_predicted_sf %>%
+          filter(Date == selected_date)
+        
+        # Z-score anomaly detection
+        mean_rain <- mean(forecast_data$Daily.Rainfall.Total..mm., na.rm = TRUE)
+        sd_rain <- sd(forecast_data$Daily.Rainfall.Total..mm., na.rm = TRUE)
+        
+        forecast_data <- forecast_data %>%
+          mutate(
+            z_score = (Daily.Rainfall.Total..mm. - mean_rain) / sd_rain,
+            is_anomaly = abs(z_score) > 2
+          )
+        
         tmap_mode("view")
         
         map <- tm_shape(sg_boundary) +
@@ -829,21 +981,22 @@ server <- function(input, output, session) {
           tm_shape(forecast_data) +
           tm_symbols(
             col = "is_anomaly",
-            palette = c("FALSE" = "#2c7fb8", "TRUE" = "#d7191c"),
+            co.scale = tm_scale(c("FALSE" = "#2c7fb8", "TRUE" = "#d7191c")),
             size = "Daily.Rainfall.Total..mm.",
-            scale = 1,
+            size.scale = tm_scale(1),
             title.size = "Rainfall (mm)",
-            title.col = "Anomaly",
+            col.legend = tm_legend("Anomaly"),
             popup.vars = c("Station", "Daily.Rainfall.Total..mm.")
           ) +
           tm_layout(
-            title = paste("Rainfall Forecast & Anomalies for", selected_date),
             legend.outside = TRUE,
             frame = FALSE
           ) +
-          tm_view(basemaps = "Esri.WorldTopoMap")
+          tm_title(paste("Rainfall Forecast & Anomalies for", selected_date)) +
+          tm_view(basemap.server = "Esri.WorldTopoMap")
         
         forecast_map_result(map)
+      })
     })
     
     output$forecast_map <- renderTmap({
@@ -851,9 +1004,24 @@ server <- function(input, output, session) {
       forecast_map_result()
     })
     
+    output$forecast_description <- renderUI({
+      HTML(paste0(
+        "<div style='color:black;'>",
+        "This map shows the forecasted rainfall for weather stations across Singapore for the selected date. ",
+        "Each station is represented by a colored circle whose <b>size</b> reflects the predicted rainfall amount (in mm), and <b>color</b> indicates whether the rainfall is considered an anomaly. ",
+        "Use this map to identify stations experiencing unusually high rainfall. Larger red circles represent potential <b>extreme rainfall events</b>.",
+        "</div>"
+      ))
+    })
+    
     output$forecasting_results <- renderUI({
       req(forecast_map_result())
-      tmapOutput("forecast_map")
+      div (
+        tmapOutput("forecast_map"),
+        br(),
+        htmlOutput("forecast_description")
+      )
+     
     })
     
 }

@@ -24,8 +24,8 @@ my_theme <- bs_theme(
   secondary = "#96816d",         
   success = "#B2B2B2",           
   
-  base_font = font_google("Raleway"),       # Body text
-  heading_font = font_google("Montserrat")  # Headings
+  base_font = font_google("Raleway"),       
+  heading_font = font_google("Montserrat")  
 )
 
 anova_sidebar <- function() {
@@ -122,8 +122,15 @@ forecasting_sidebar <- function() {
   )
 }
 
+decomposition_sidebar <- function() {
+  div(
+    selectInput("decomp_station", "Select Station:", choices = NULL),
+    actionButton("run_decomposition", "View Decomposition", icon = icon("chart-area"), class = "btn-primary", style = "width: 100%")
+  )
+}
+
 ui <- (
-  page_navbar(title = "RainSense",
+  page_navbar(title = tagList(tags$img(src = "logo.png", height = "30px", style = "margin-right: 10px;")),
               theme = my_theme,
               id = "main_navbar",
               
@@ -139,25 +146,31 @@ ui <- (
                     p("RainSense is an interactive platform designed to help you explore rainfall variability and forecasting patterns across Singapore. Dive into our visual and analytical tools to uncover insights from historical and projected rainfall data."),
                     br(),
                     layout_columns(
+                      col_widths = c(4, 4, 4),
+                      div(
+                        style = "text-align: center",
+                        h5(tags$b("Confirmatory Analysis:")),
+                        p("Compare daily rainfall across different monsoon seasons and uncover trends in extreme rainfall events through statistical analysis."),
+                        ),
+                      div(
+                        style = "text-align: center",
+                        h5(tags$b("Spatial Analysis & Clustering:")),
+                        p("Visualize rainfall distribution across regions and identify spatial patterns that may influence flood risks or drought zones."),
+                        ),
+                      div(
+                        style = "text-align: center",
+                        h5(tags$b("Forecasting:")),
+                        p("Detect rainfall anomalies and generate future rainfall forecasts using data-driven models, helping you anticipate wet or dry periods ahead of time."),
+                        )
+                      ),
+                    br(),
+                    layout_columns(
                       col_widths = c(6, 6),
-                      
                       div(
-                        p(tags$b("Confirmatory Analysis: "),
-                          "Compare daily rainfall across different monsoon seasons and uncover trends in extreme rainfall events through statistical analysis."
-                        ),
-                        br(),
-                        p(tags$b("Spatial Analysis: "),
-                          "Visualize rainfall distribution across regions and identify spatial patterns that may influence flood risks or drought zones."
-                        ),
-                        br(),
-                        p(tags$b("Forecasting: "),
-                          "Detect rainfall anomalies and generate future rainfall forecasts using data-driven models, helping you anticipate wet or dry periods ahead of time."
-                        )
-                        ),
-
-                      div(
-                        tmapOutput("station_map")
-                        )
+                        h5(tags$b("Dataset Preview")),
+                        DT::dataTableOutput("weather_table")
+                      ),
+                      tmapOutput("station_map")
                       )
                     )
                 ),
@@ -169,31 +182,30 @@ ui <- (
                 navset_card_tab(
                   nav_panel(
                     "ANOVA",
-                    page_fillable(
-                      layout_sidebar(
-                        sidebar = anova_sidebar(),
-                        div(
-                          plotlyOutput("anova_plot"),
-                          br(),
-                          textOutput("anova_summary")
-                        )
+                    layout_sidebar(
+                      open = "always",
+                      sidebar = sidebar(open = "always",
+                                        anova_sidebar()),
+                      div(
+                        plotlyOutput("anova_plot"),
+                        br(),
+                        htmlOutput("anova_summary")
                       )
                     )
                   ),
                   
                   nav_panel(
                     "Poisson",
-                    page_fillable(
-                      layout_sidebar(
-                        sidebar = poisson_sidebar(),
-                        div(
-                          plotlyOutput("poisson_plot"),
-                          br(),
-                          htmlOutput("poisson_summary")
+                    layout_sidebar(
+                      sidebar = sidebar(open = "always",
+                                        poisson_sidebar()),
+                      div(
+                        plotlyOutput("poisson_plot"),
+                        br(),
+                        htmlOutput("poisson_summary")
                         )
                       )
                     )
-                  )
                 )
               ),
               
@@ -204,20 +216,19 @@ ui <- (
                 navset_card_tab(
                   nav_panel(
                   "Ordinary Kriging",
-                  page_fillable(
-                    layout_sidebar(
-                      sidebar = kriging_sidebar(),
-                      uiOutput("kriging_results")
-                    ))
+                  layout_sidebar(
+                    sidebar = sidebar(open = "always",
+                                      kriging_sidebar()),
+                    uiOutput("kriging_results")
+                    )
                   ),
 
                   nav_panel(
                   "IDW Interpolation",
-                  page_fillable(
-                    layout_sidebar(
-                      sidebar = idw_sidebar(),
-                      uiOutput("idw_results")
-                      )
+                  layout_sidebar(
+                    sidebar = sidebar(open = "always",
+                                      idw_sidebar()),
+                    uiOutput("idw_results")
                     )
                   )
                   )
@@ -227,12 +238,11 @@ ui <- (
               nav_panel(
                 title = "Clustering",
                 id = "clustering_panel",
-                page_fillable(
-                  layout_sidebar(
-                    sidebar = clustering_sidebar(),
-                    uiOutput("clustering_results")
+                layout_sidebar(
+                  sidebar = sidebar(open = "always",
+                                    clustering_sidebar()),
+                  uiOutput("clustering_results")
                   )
-                )
               ),
               
               # ---------- Forecasting Panel ----------
@@ -241,13 +251,20 @@ ui <- (
                 id = "forecasting_panel",
                 navset_card_tab(
                   nav_panel(
-                    "Forecasting",
-                    page_fillable(
-                      layout_sidebar(
-                        sidebar = forecasting_sidebar(),
-                        uiOutput("forecasting_results")
-                      )
+                    "Decomposition",
+                    layout_sidebar(
+                      sidebar = sidebar(open = "always",
+                                        decomposition_sidebar()),
+                      uiOutput("decomp_results")
                     )
+                  ),
+                  nav_panel(
+                    "Forecasting",
+                    layout_sidebar(
+                      sidebar = sidebar(open = "always",
+                                        forecasting_sidebar()),
+                      uiOutput("forecasting_results")
+                      )
                   )
                 )
               )
