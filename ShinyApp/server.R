@@ -18,8 +18,6 @@ library(feasts)
 library(fable)
 library(seasonal)
 
-tmap_mode("view")
-
 # ----------------------------------
 # CDA Data
 
@@ -61,6 +59,8 @@ weather_predicted_sf <- readRDS("data/weather_predicted_sf.rds")
 # ----------------------------------
 # Main Server
 
+tmap_mode("view")
+
 server <- function(input, output, session) {
   
     # ----------------------------------
@@ -73,12 +73,18 @@ server <- function(input, output, session) {
         rownames = FALSE
       )
     })
+    
   
     output$station_map <- renderTmap({
+      req(weather_sf)
+      
+      weather_sf$Status <- factor(weather_sf$Status, levels = c("Active", "Inactive"))
+      
+      
       tm_shape(weather_sf) +
         tm_symbols(
-          col = "Status",  
-          col.scale = tm_scale(c("Active" = "#00b050","Inactive" = "#ff4d4d")),
+          col = "Status",
+          col.scale = tm_scale(c("#00b050", "#ff4d4d")),
           col.legend = tm_legend("Status"),
           size = 0.7,
           size.scale = tm_scale(1),
@@ -88,6 +94,7 @@ server <- function(input, output, session) {
         tm_title("Weather Station Map") +
         tm_view(basemap.server = "Esri.WorldTopoMap")
     })
+    
     
     # ----------------------------------
     # CDA
@@ -892,6 +899,31 @@ server <- function(input, output, session) {
           labs(title = paste("STL Decomposition for", station_name))
         
         stl_plot_result(stl_plot)
+        
+        output$ts_description <- renderUI({
+          HTML(paste0(
+            "<div style='color:black;'>",
+            "The top panel shows the raw monthly rainfall values for <b>", station_name, "</b> over time.<br>",
+            "The ACF (Autocorrelation Function) plot indicates how strongly rainfall values are correlated with past months - helping detect repeating cycles or persistence in rainfall patterns.<br>",
+            "The bottom-right plot compares seasonal rainfall trends by month across different years. Each line represents a year, helping identify months with consistently higher or lower rainfall.<br>",
+            "<i>Use this visualization to spot general trends, seasonality, and year-to-year variation.</i>",
+            "</div>"
+          ))
+        })
+        
+        output$stl_description <- renderUI({
+          HTML(paste0(
+            "<div style='color:black;'>",
+            "This chart breaks the rainfall time series of <b>", station_name, "</b> into three additive components using <b>STL (Seasonal-Trend decomposition using Loess)</b>:<br>",
+            "<ul style='margin-top: 0.5rem; margin-bottom: 0.5rem;'>",
+            "<li><b>Trend:</b> Long-term direction of rainfall (e.g., increasing, stable, or decreasing over years).</li>",
+            "<li><b>Seasonal:</b> Repeating monthly or annual patterns, such as monsoon seasons.</li>",
+            "<li><b>Remainder:</b> Irregular fluctuations that aren't explained by trend or seasonality - often noise or anomalies.</li>",
+            "</ul>",
+            "This decomposition helps you identify meaningful patterns and isolate unusual rainfall behavior at the selected station.",
+            "</div>"
+          ))
+        })
       })
     })
     
@@ -899,35 +931,11 @@ server <- function(input, output, session) {
       req(ts_plot_result())
       ts_plot_result()
     })
-    
-    output$ts_description <- renderUI({
-      HTML(paste0(
-        "<div style='color:black;'>",
-        "The top panel shows the raw monthly rainfall values for the selected station over time. ",
-        "Below that, the <b>ACF (Autocorrelation Function)</b> plot indicates how strongly rainfall values are correlated with past months - helping detect repeating cycles or persistence in rainfall patterns. ",
-        "The bottom-right plot compares seasonal rainfall trends by month across different years. Each line represents a year, helping identify months with consistently higher or lower rainfall. ",
-        "<i>Use this visualization to spot general trends, seasonality, and year-to-year variation.</i>",
-        "</div>"
-      ))
-    })
+
     
     output$stl_decomp_plot <- renderPlot({
       req(stl_plot_result())
       stl_plot_result()
-    })
-    
-    output$stl_description <- renderUI({
-      HTML(paste0(
-        "<div style='color:black;'>",
-        "This chart breaks the rainfall time series into three additive components using STL (Seasonal-Trend decomposition using Loess):<br>",
-        "<ul style='margin-top: 0.5rem; margin-bottom: 0.5rem;'>",
-        "<li><b>Trend:</b> Long-term direction of rainfall (e.g., increasing, stable, or decreasing over years).</li>",
-        "<li><b>Seasonal:</b> Repeating monthly or annual patterns, such as monsoon seasons.</li>",
-        "<li><b>Remainder:</b> Irregular fluctuations that aren't explained by trend or seasonality - often noise or anomalies.</li>",
-        "</ul>",
-        "This decomposition helps you identify meaningful patterns and isolate unusual rainfall behavior at the selected station.",
-        "</div>"
-      ))
     })
     
     output$decomp_results <- renderUI({
@@ -973,6 +981,8 @@ server <- function(input, output, session) {
             is_anomaly = abs(z_score) > 2
           )
         
+        forecast_data$is_anomaly <- factor(forecast_data$is_anomaly, levels = c(TRUE, FALSE))
+        
         tmap_mode("view")
         
         map <- tm_shape(sg_boundary) +
@@ -981,7 +991,7 @@ server <- function(input, output, session) {
           tm_shape(forecast_data) +
           tm_symbols(
             col = "is_anomaly",
-            co.scale = tm_scale(c("FALSE" = "#2c7fb8", "TRUE" = "#d7191c")),
+            col.scale = tm_scale(c("#d7191c", "#2c7fb8")),
             size = "Daily.Rainfall.Total..mm.",
             size.scale = tm_scale(1),
             title.size = "Rainfall (mm)",
@@ -996,22 +1006,22 @@ server <- function(input, output, session) {
           tm_view(basemap.server = "Esri.WorldTopoMap")
         
         forecast_map_result(map)
+        
+        output$forecast_description <- renderUI({
+          HTML(paste0(
+            "<div style='color:black;'>",
+            "This map shows the forecasted rainfall of weather stations for <b>", selected_date, "</b>. ",
+            "Each station is represented by a colored circle whose <b>size</b> reflects the predicted rainfall amount (in mm), and <b>color</b> indicates whether the rainfall is considered an anomaly. ",
+            "<i>Use this map to identify stations experiencing unusually high rainfall.</i> Larger red circles represent potential <b>extreme rainfall events</b>.",
+            "</div>"
+          ))
+        })
       })
     })
     
     output$forecast_map <- renderTmap({
       req(forecast_map_result())
       forecast_map_result()
-    })
-    
-    output$forecast_description <- renderUI({
-      HTML(paste0(
-        "<div style='color:black;'>",
-        "This map shows the forecasted rainfall for weather stations across Singapore for the selected date. ",
-        "Each station is represented by a colored circle whose <b>size</b> reflects the predicted rainfall amount (in mm), and <b>color</b> indicates whether the rainfall is considered an anomaly. ",
-        "Use this map to identify stations experiencing unusually high rainfall. Larger red circles represent potential <b>extreme rainfall events</b>.",
-        "</div>"
-      ))
     })
     
     output$forecasting_results <- renderUI({
