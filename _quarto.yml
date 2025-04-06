@@ -29,14 +29,14 @@ website:
           href: "Pages/Prototype/SpatialAnalysis.html"
         - text: "Forecasting"
           href: "Pages/Prototype/Forecasting.html"
-      - text: "Team"
-        href: "Pages/About.html"
       - text: "Github"
         menu:
         - text: "Project Site"
           href: "https://github.com/zqwxxg/ISSS608-VAA-Group2"
         - text: "Shiny App"
           href: "https://github.com/zqwxxg/RainSenseShinyApp"
+      - text: "Team"
+        href: "Pages/About.html"
           
 format:
   html:
