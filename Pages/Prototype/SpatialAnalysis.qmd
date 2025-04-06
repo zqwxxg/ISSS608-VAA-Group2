@@ -1,5 +1,6 @@
 ---
 title: "Spatial Rainfall Analysis"
+title-block-banner: true
 author: "Wong Zi Qi"
 date: "March 22, 2025"
 date-modified: "March 31, 2025"
@@ -19,7 +20,7 @@ Spatial variability is explored through interpolation techniques to generate cho
 ## 1.1 Installing Packages
 
 ```{r}
-pacman::p_load(tidyverse, lubridate, tsibble, sf, terra, gstat, automap, tmap, viridis)
+pacman::p_load(jsonify, jsonlite, tidyverse, lubridate, tsibble, sf, terra, gstat, automap, tmap, viridis)
 ```
 
 ## 1.2 Importing Data
@@ -94,11 +95,13 @@ weather <- weather %>%
 
 ## 3.1 Data Pre-processing
 
-The data is first aggregated to represent monthly spatial points, summarizing rainfall measurements by station and month. For spatial referencing, the latitude and longitude values for each station are extracted using the `first()` function, as these coordinates remain constant within each station. The dataset is then converted into an `sf` object to enable geospatial analysis.
+The weather station status is first incorporated to distinguish between active and inactive stations for visualization purposes.
 
 ```{r}
 weather$Status <- ifelse(weather$Station %in% active_stations$Station.Name, "Active", "Inactive")
 ```
+
+The dataset is then converted into an `sf` object to facilitate geospatial analysis and mapping. To ensure proper spatial referencing, the Coordinate Reference System (CRS) is initially set to EPSG:4326, which uses the WGS 84 standard - commonly used for global positioning and representing geographic coordinates in degrees. Subsequently, the spatial object is transformed to EPSG:3414, also known as SVY21 / Singapore TM, a projected coordinate system specifically designed for mapping within Singapore. Unlike WGS 84, SVY21 expresses coordinates in meters, making it more suitable for accurate distance measurements, spatial interpolation, and localized mapping within the Singapore context.
 
 ```{r}
 weather_sf <- st_as_sf(weather, 
@@ -108,11 +111,32 @@ weather_sf <- st_as_sf(weather,
   st_transform(crs = 3414)
 ```
 
+It is visualized as shown below.
+
+```{r}
+# tm_check_fix()
+# tmap_mode("view")
+# 
+# tm_shape(weather_sf) +
+#   tm_symbols(
+#     fill = "Status",
+#     fill.scale = tm_scale(c("Active" = "#00b050", "Inactive" = "#ff4d4d")),
+#     size = 0.6,
+#     size.scale = tm_scale(1),
+#     fill.legend = tm_legend("Status"),
+#     popup.vars = c("Station")
+#     ) +
+#   tm_title("Weather Station Map") +
+#   tm_view(basemap.server = "Esri.WorldTopoMap")
+```
+
+Next, the data is aggregated to represent monthly spatial points, summarizing rainfall measurements by station and month. For spatial referencing, the latitude and longitude values for each station are extracted using the `first()` function, as these coordinates remain constant within each station.
+
 ```{r}
 rf_data <- weather %>%
   mutate(MonthYear = floor_date(Date, "month")) %>%
   group_by(Station, MonthYear) %>%
-  # mutate(MonthYear = yearmonth(MonthYear)) %>%
+  mutate(MonthYear = yearmonth(MonthYear)) %>%
   summarise(
     MonthlyRain = sum(Daily.Rainfall.Total..mm., na.rm = TRUE),
     Latitude = first(Latitude),
@@ -120,20 +144,6 @@ rf_data <- weather %>%
     .groups = "drop"
   )
 ```
-
-```{r}
-rf_data <- weather %>%
-  mutate(Year = year(Date)) %>%
-  group_by(Station, Year) %>%
-  summarise(
-    YearlyRain = sum(Daily.Rainfall.Total..mm., na.rm = TRUE),
-    Latitude = first(Latitude),
-    Longitude = first(Longitude),
-    .groups = "drop"
-    )
-```
-
-To ensure proper spatial referencing, the Coordinate Reference System (CRS) is initially set to EPSG:4326, which uses the WGS 84 standard - commonly used for global positioning and representing geographic coordinates in degrees. Subsequently, the spatial object is transformed to EPSG:3414, also known as SVY21 / Singapore TM, a projected coordinate system specifically designed for mapping within Singapore. Unlike WGS 84, SVY21 expresses coordinates in meters, making it more suitable for accurate distance measurements, spatial interpolation, and localized mapping within the Singapore context.
 
 ```{r}
 rf_data_sf <- st_as_sf(rf_data, 
@@ -151,32 +161,17 @@ sg_boundary <- st_read(dsn = "data/geospatial",
   st_transform(crs = 3414)
 ```
 
-```{r}
-tm_check_fix()
-tmap_mode("view")
-
-tm_shape(weather_sf) +
-  tm_symbols(
-    col = "Status",
-    palette = c("Active" = "#2c7fb8", "Inactive" = "#fdae61"),
-    size = 0.6,                                                 
-    scale = 1,                                                   
-    title.col = "Status",
-    tooltip.vars = c("Station")
-  )
-```
-
 The pre-processed data is visualized using a quantitative dot map, offering a spatial overview of monthly rainfall distribution across Singapore at the station level.
 
 ```{r}
-tm_check_fix()
-tmap_mode("view")
-
-tm_shape(sg_boundary) +
-tm_borders(lwd = 1, col = "gray50") +
-  tm_shape(rf_data_sf) +
-  tm_dots(fill = 'MonthlyRain', size = 0.8) + 
-  tm_title("Monthly Rainfall Distribution by Station")
+# tm_check_fix()
+# tmap_mode("view")
+# 
+# tm_shape(sg_boundary) +
+# tm_borders(lwd = 1, col = "gray50") +
+#   tm_shape(rf_data_sf) +
+#   tm_dots(fill = 'MonthlyRain', size = 0.8) +
+#   tm_title("Monthly Rainfall Distribution by Station")
 ```
 
 ```{r}
@@ -270,17 +265,19 @@ pred <- terra::rasterize(resp, grid, field = "pred", fun = "mean")
 The interpolated rainfall surface is then visualized through a choropleth map.
 
 ```{r}
-tm_check_fix()
 tmap_mode("plot")
 
-tm_shape(pred) + 
-  tm_raster(col.scale = tm_scale(values = "brewer.blues"),
-            col.legend = tm_legend(title = "Total monthly\n rainfall (mm)")) +
-  tm_style("white") +
-  tm_title(paste("Distribution of Monthly Rainfall -", month_label)) +
-  tm_compass(type = "8star", size = 2) +
-  tm_scalebar(position = c("left", "bottom")) +
-  tm_grid(alpha = 0.2)
+tm_shape(pred) +
+      tm_raster(
+        col.legend = tm_legend(title = "Total rainfall (mm)")
+      ) +
+      tm_title(
+    text = paste("Distribution of Monthly Rainfall -", month_label),
+  ) +
+      tm_layout(frame = TRUE) +
+      tm_compass(type = "8star", size = 2) +
+      tm_scalebar(position = c("left", "bottom")) +
+      tm_grid(alpha = 0.2)
 ```
 
 The western and southwestern regions (e.g., Jurong, Clementi, Bukit Batok, and Tuas) recorded the highest rainfall levels (200-220 mm), shown in the darkest blue shades. This aligns with typical late Northeast Monsoon influence or possible localized convective rainfall in those areas.
@@ -325,7 +322,6 @@ kpred <- terra::rasterize(resp, grid,
 The interpolated rainfall surface is then visualized through a choropleth map.
 
 ```{r}
-tm_check_fix()
 tmap_mode("plot")
 
 tm_shape(kpred) + 

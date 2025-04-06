@@ -1,0 +1,262 @@
+---
+title: "Anomaly Detection and Time-Series Forecasting"
+title-block-banner: true
+author: "Xie Haoyang"
+date: "March 23, 2025"
+date-modified: "last-modified"
+execute:
+  echo: true
+  eval: true
+  warning: false
+  freeze: true
+---
+
+# 1. Introduction
+
+In the realm of urban management and disaster prevention, rainfall early - warning systems play a crucial role, especially for a city - state like Singapore. With its unique geographical location and climate characteristics, Singapore is highly susceptible to the impacts of rainfall - related hazards such as floods. This project aims to develop a rainfall early - warning system using Shiny app, which integrates multiple data - driven analytical techniques.
+
+This technical document focuses on the anomaly detection and time - series forecasting components of the system. These two aspects are fundamental for accurately identifying unusual rainfall patterns and predicting future rainfall amounts. By leveraging these capabilities, the system can provide timely and effective warnings, helping relevant departments and the public to better prepare for and respond to rainfall - induced events.
+
+# 2. Data Preparation
+
+## 2.1 Data sources
+
+Rainfall data set is from Meteorological Service Singapore (MSS). Download the monthly data from this site for each rain station from 2018-2024 and pre-combine each CSV file using python to form weather_data.csv.
+
+Active rainfall station data are also from MSS. This dataset used to combine with rainfall data to exclude inactive rain stations.
+
+## 2.1 Installing the Required R Packages
+
+```{r}
+pacman::p_load(tidyverse, ggplot2, SmartEDA)
+```
+
+## 2.2 Importing data
+
+```{r}
+weather <- read.csv("data/weather_data.csv")
+active_stations <- read.csv("data/active_rainfall_stations.csv")
+```
+
+## 2.3 Cleaning data
+
+```{r}
+# Remove () for consistent naming
+weather$Station <- gsub("[()]", "", trimws(as.character(weather$Station)))
+active_stations$Station.Name <- gsub("[()]", "", trimws(as.character(active_stations$Station.Name)))
+
+# Filter for active stations
+weather_active <- weather %>% 
+  filter(Station %in% active_stations$Station.Name)
+
+# Select relevant columns for EDA 
+weather_active <- weather_active %>%
+  select(
+    Station, Year, Month, Day,
+    Daily.Rainfall.Total..mm.,
+    Highest.30.Min.Rainfall..mm.,
+    Highest.60.Min.Rainfall..mm.,
+    Highest.120.Min.Rainfall..mm.,
+  ) %>%
+  filter(!is.na(Daily.Rainfall.Total..mm.)) %>%
+  merge(active_stations, by.x = "Station", by.y = "Station.Name") %>%
+  select(
+    Station, Year, Month, Day,
+    Daily.Rainfall.Total..mm.,
+    Highest.30.Min.Rainfall..mm.,
+    Highest.60.Min.Rainfall..mm.,
+    Highest.120.Min.Rainfall..mm.,
+    Latitude, Longitude
+  ) %>%
+  mutate(
+    Date = make_date(Year, Month, Day),
+    Station = as.factor(Station),
+    
+    # Add Monsoon Season Label
+    Season = case_when(
+      Month %in% c(12, 1, 2) | (Month == 3 & Day <= 15) ~ "Northeast Monsoon",
+      (Month == 3 & Day > 15) | Month %in% c(4, 5) ~ "Inter-monsoon I",
+      Month %in% c(6, 7, 8, 9) ~ "Southwest Monsoon",
+      Month %in% c(10, 11) ~ "Inter-monsoon II",
+      TRUE ~ "Unknown"
+    ),
+    Season = factor(Season, levels = c("Northeast Monsoon", "Inter-monsoon I", "Southwest Monsoon", "Inter-monsoon II"))
+  ) %>%
+  arrange(Station, Date)
+```
+
+```{r}
+# all variables EDA (descriptive statistical)
+weather_active %>% ExpData(type = 1)
+```
+
+```{r}
+weather_active %>% ExpData(type = 2)
+```
+
+## 2.4 Save the merged file separately for subsequent use
+
+```{r}
+# write.csv(weather_active, "weather_active.csv", row.names = FALSE)
+```
+
+# 3. Anomaly Detection and Time-Series Forecasting
+
+## 3.1 Data prediction to 2025
+
+To prevent R from repeatedly training the model and affecting the performance. Therefore, the SRIMA model is pre-trained on the previously saved dataset using the SRIMA model to predict the daily rainfall data for each site in 2025 to form a new dataset.
+
+```{r}
+weather_data <- read.csv("data/weather_active_predicted.csv")
+weather_data <- weather_data %>% mutate(Date = as.Date(Date))
+```
+
+ARIMA (Auto-Regressive Integrated Moving Average) model is a popular time series forecasting method, and it is suitable for predicting rainfall data for the following reasons:
+
+-   **Handling of time - series data**: Rainfall data is a typical time - series data. ARIMA model can effectively capture the autocorrelation characteristics in time - series data, that is, the correlation between the current value and the historical value, and use this correlation to predict future values.
+
+-   **Model flexibility**: ARIMA model has a variety of parameter combinations, which can be adjusted according to the characteristics of different rainfall data sets to better fit the data and improve the prediction accuracy.
+
+-   **Consideration of stationarity**: Before using the ARIMA model, the stationarity of the data is usually tested and processed. This is very important for rainfall data, because the non - stationarity of rainfall data is common. By making the data stationary, the model can better extract the inherent law of the data and improve the prediction effect.
+
+## 3.2 Function
+
+#### Package installation
+
+```{r}
+library(leaflet)
+library(dplyr)
+library(ggplot2)
+```
+
+#### Select Date
+
+Because quarto does not facilitate an interactive design, the date is selected manually here. All interactivity will be available in the shinyapp!
+
+```{r}
+selected_date <- as.Date("2025-12-01")
+```
+
+#### Detecting anomalies
+
+```{r}
+selected_data <- weather_data %>% filter(Date == selected_date)
+
+# Calculating Z-values and detecting anomalies
+mean_rain <- mean(selected_data$Daily.Rainfall.Total..mm., na.rm = TRUE)
+sd_rain <- sd(selected_data$Daily.Rainfall.Total..mm., na.rm = TRUE)
+
+selected_data <- selected_data %>% mutate(
+  z_score = (Daily.Rainfall.Total..mm. - mean_rain) / sd_rain,
+  is_anomaly = abs(z_score) > 2  
+)
+```
+
+#### Plotting
+
+::: panel-tabset
+## The plot
+
+```{r,echo=FALSE}
+leaflet(selected_data) %>%
+  addTiles() %>%
+  addCircleMarkers(
+    ~Longitude, ~Latitude,
+    radius = ~ifelse(is_anomaly, 8, Daily.Rainfall.Total..mm. / 5), 
+    color = ~ifelse(is_anomaly, "red", "blue"),
+    fillOpacity = 0.7,
+    popup = ~paste0("Station: ", Station, "<br>Rainfall: ", Daily.Rainfall.Total..mm., " mm")
+  )
+```
+
+## The code
+
+```{r,eval=FALSE}
+leaflet(selected_data) %>%
+  addTiles() %>%
+  addCircleMarkers(
+    ~Longitude, ~Latitude,
+    radius = ~ifelse(is_anomaly, 8, Daily.Rainfall.Total..mm. / 5), 
+    color = ~ifelse(is_anomaly, "red", "blue"),
+    fillOpacity = 0.7,
+    popup = ~paste0("Station: ", Station, "<br>Rainfall: ", Daily.Rainfall.Total..mm., " mm")
+  )
+```
+:::
+
+# 4. Story Board
+
+Storyboard aims to visually maps out user’s experience. It is a tool for making strong visual connection between the insights uncovered based on research and user’s interaction with the R Shiny dashboard application.
+
+Shiny link: https://xiehaoyangxhy.shinyapps.io/Shiny_Anomaly_Detection_and_Time-Series_Forcasting/
+
+Code chunk below shows the simplified version of UI and Server components in R Shiny application
+
+```{r}
+library(shiny)
+library(leaflet)
+library(dplyr)
+
+# Importing data
+weather_data <- read.csv("data/weather_active_predicted.csv")
+weather_data <- weather_data %>% mutate(Date = as.Date(Date))
+
+# UI 
+ui <- fluidPage(
+  titlePanel("Rainfall Map Visualization"),
+  sidebarLayout(
+    sidebarPanel(
+      dateInput("selected_date", "Select a Date:", value = "2025-01-01", format = "yyyy-mm-dd")
+    ),
+    mainPanel(
+      leafletOutput("rainfall_map")
+    )
+  )
+)
+
+# Server
+server <- function(input, output) {
+  output$rainfall_map <- renderLeaflet({
+    req(input$selected_date)
+    
+    selected_data <- weather_data %>% filter(Date == input$selected_date)
+    
+    # Z-scroce
+    mean_rain <- mean(selected_data$Daily.Rainfall.Total..mm., na.rm = TRUE)
+    sd_rain <- sd(selected_data$Daily.Rainfall.Total..mm., na.rm = TRUE)
+    
+    selected_data <- selected_data %>% mutate(
+      z_score = (Daily.Rainfall.Total..mm. - mean_rain) / sd_rain,
+      is_anomaly = abs(z_score) > 2 
+    )
+    
+    # Plotting
+    leaflet(selected_data) %>%
+      addTiles() %>%
+      addCircleMarkers(
+        ~Longitude, ~Latitude,
+        radius = ~ifelse(is_anomaly, 8, Daily.Rainfall.Total..mm. / 5),  
+        color = ~ifelse(is_anomaly, "red", "blue"),
+        fillOpacity = 0.7,
+        popup = ~paste0("Station: ", Station, "<br>Rainfall: ", Daily.Rainfall.Total..mm., " mm")
+      )
+  })
+}
+
+# Run Shiny App
+shinyApp(ui = ui, server = server)
+```
+
+#### User Guide - Anomaly Detection and Time-Series Forecasting
+
+#### 1. Time Selection
+
+Part 1 of the figure shows the Time Selection function, which allows the user to freely select any day from 2018-2025 to view the data. It should be noted that the data for 2018-2024 are actual data and 2025 are forecast data.
+
+#### 2. Anomaly detection
+
+The second part of the figure represents anomaly detection. This function detects anomalies by calculating the Z-value, if the rainfall recorded at the station is greater than 2 Z-values, it is considered as an anomaly and is marked in red color
+
+#### 3. Rainfall Data Presentation
+
+The third part of the figure shows the general rainfall data presentation. When the mouse is moved to the site you want to select, the site will automatically display the rainfall of the day, and at the same time, the larger the rainfall site the larger the area of the blue circle.

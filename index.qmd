@@ -1,5 +1,8 @@
 ---
-title: "Rainfall Variability and Forecasting in Singapore"
+format: html
+page-layout: full
 ---
 
-![](images/logo.png){fig-align="center"}
+::: {#custom-hero-banner}
+![](images/home_background.png)
+:::

@@ -1,9 +1,16 @@
 ---
-title: "About"
+title: "??????? Meet the RainSense Team"
+title-block-banner: true
 ---
 
-About this site
+We are a team of aspiring data and tech professionals from the Master of IT in Business (MITB) program at Singapore Management University (SMU). RainSense is our passion project-born from a shared interest in environmental analytics, smart city solutions, and impactful data storytelling.
 
-```{r}
-1 + 1
-```
+Our goal is to empower users with intuitive tools to explore Singapore's rainfall variability and forecast patterns, blending advanced analytics with user-friendly design.
+
+#### **Members**
+
+-   [Wong Zi Qi](https://zqwong-isss608.netlify.app/)
+
+-   [Xie Haoyang](https://isss608-xiehaoyang.netlify.app/)
+
+-   

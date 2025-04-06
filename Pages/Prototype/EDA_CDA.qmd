@@ -1,0 +1,454 @@
+---
+title: "Exploratory Data Analysis and Confirmatory Data Analysis"
+title-block-banner: true
+author: "WANG XINGYUN"
+execute: 
+  echo: true
+  eval: true
+  warning: false
+  freeze: true
+---
+
+# 1.Setup
+
+## 1.1 Loading Packages
+
+```{r}
+pacman::p_load(tidyverse, lubridate, SmartEDA, 
+               ggplot2, DataExplorer, dplyr, ggmap,
+               ggstatsplot, ggpubr)
+```
+
+## 1.2 Loading Data
+
+Due to the download method of the Singapore Meteorological Agency website, the relevant data for each location can only be downloaded on a monthly basis. However, our project requires downloading 86 files for 62 locations from 2018 to 2024, which means that one location needs to download 86 files. After Python processing, we merged them into one CSV file and named it weather_data
+
+We will load the merged raw data weather_data.csv and the currently active station data (active_rainfall_stations.csv)
+
+```{r}
+weather <- read.csv("data/weather_data.csv")
+active_stations <- read.csv("data/active_rainfall_stations.csv")
+```
+
+# 2. Cleaning Data and Descriptive analysis
+
+We have to filter for active station–total 27 stations for next analysis.
+
+```{r}
+
+# Remove () for consistent naming
+weather$Station <- gsub("[()]", "", trimws(as.character(weather$Station)))
+active_stations$Station.Name <- gsub("[()]", "", trimws(as.character(active_stations$Station.Name)))
+
+# Filter for active stations
+weather_active <- weather %>% 
+  filter(Station %in% active_stations$Station.Name)
+
+# Select relevant columns for EDA 
+weather_active <- weather_active %>%
+  select(
+    Station, Year, Month, Day,
+    Daily.Rainfall.Total..mm.,
+    Highest.30.Min.Rainfall..mm.,
+    Highest.60.Min.Rainfall..mm.,
+    Highest.120.Min.Rainfall..mm.,
+  ) %>%
+  filter(!is.na(Daily.Rainfall.Total..mm.)) %>%
+  merge(active_stations, by.x = "Station", by.y = "Station.Name") %>%
+  select(
+    Station, Year, Month, Day,
+    Daily.Rainfall.Total..mm.,
+    Highest.30.Min.Rainfall..mm.,
+    Highest.60.Min.Rainfall..mm.,
+    Highest.120.Min.Rainfall..mm.,
+    Latitude, Longitude
+  ) %>%
+  mutate(
+    Date = make_date(Year, Month, Day),
+    Station = as.factor(Station),
+    
+    # Add Monsoon Season Label
+    Season = case_when(
+      Month %in% c(12, 1, 2) | (Month == 3 & Day <= 15) ~ "Northeast Monsoon",
+      (Month == 3 & Day > 15) | Month %in% c(4, 5) ~ "Inter-monsoon I",
+      Month %in% c(6, 7, 8, 9) ~ "Southwest Monsoon",
+      Month %in% c(10, 11) ~ "Inter-monsoon II",
+      TRUE ~ "Unknown"
+    ),
+    Season = factor(Season, levels = c("Northeast Monsoon", "Inter-monsoon I", "Southwest Monsoon", "Inter-monsoon II"))
+  ) %>%
+  arrange(Station, Date)
+
+```
+
+```{r}
+# all variables EDA (descriptive statistical)
+weather_active %>% ExpData(type = 1)
+weather_active %>% ExpData(type = 2)
+```
+
+We filtered historical weather data from active MSS rainfall stations and retained relevant columns for temporal rainfall analysis, including daily and extreme rainfall. We added a 'Date' column and labeled each record with a monsoon season based on the calendar month. Missing values in 'Daily Rainfall' were removed for analysis consistency.
+
+# 3. Exploratory Data Analysis
+
+## 3.1 Monthly trends
+
+```{r}
+weather_active %>%
+  group_by(Year, Month) %>%
+  summarise(AvgRain = mean(Daily.Rainfall.Total..mm., na.rm = TRUE)) %>%
+  ggplot(aes(x = Month, y = AvgRain, group = Year, color = as.factor(Year))) +
+  geom_line() + geom_point() +
+  labs(title = "Monthly Average Rainfall", y = "Avg Rainfall (mm)", color = "Year") +
+  scale_x_continuous(breaks = 1:12) +
+  theme_minimal()
+```
+
+## 3.2 Comparison of Rainfall in Various Monsoon Seasons
+
+```{r}
+# the rainfall in all seasons 
+library(ggplot2)
+ggplot(weather_active, aes(x = Season, y = Daily.Rainfall.Total..mm.)) +
+  geom_boxplot(fill = "skyblue") +
+  theme_minimal() +
+  labs(title = "Daily Rainfall across Monsoon Seasons", y = "Daily Rainfall (mm)")
+```
+
+## 3.3 Seasonal distribution - average monthly rainfall
+
+Check which months have the highest rainfall throughout the year and whether it is consistent with the monsoon cycle
+
+```{r}
+weather_active %>%
+  group_by(Month) %>%
+  summarise(Avg_Rain = mean(Daily.Rainfall.Total..mm.)) %>%
+  ggplot(aes(x = Month, y = Avg_Rain)) +
+  geom_col(fill = "steelblue") +
+  labs(title = "Average Daily Rainfall by Month", x = "Month", y = "Avg Daily Rainfall (mm)") +
+  scale_x_continuous(breaks = 1:12) +
+  theme_minimal()
+```
+
+## 3.4 Annual trend - total annual rainfall
+
+```{r}
+weather_active %>%
+  group_by(Year) %>%
+  summarise(Total_Rainfall = sum(Daily.Rainfall.Total..mm.)) %>%
+  ggplot(aes(x = Year, y = Total_Rainfall)) +
+  geom_line(group = 1, color = "lightblue", size = 1.2) +
+  geom_point(color = "lightgreen") +
+  labs(title = "Total Rainfall by Year", y = "Total Rainfall (mm)") +
+  scale_x_continuous(breaks = 2018:2024) +
+  theme_minimal()
+```
+
+## 3.5 Rainfall differences at different sites
+
+Check which region has the most rainfall and whether there is any geographical deviation.
+
+```{r}
+weather_active %>%
+  group_by(Station) %>%
+  summarise(Avg_Rain = mean(Daily.Rainfall.Total..mm.)) %>%
+  arrange(desc(Avg_Rain)) %>%
+ 
+  ggplot(aes(x = reorder(Station, -Avg_Rain), y = Avg_Rain)) +
+  geom_col(fill = "lightblue") +
+  labs(title = "Rainfall differences at different sites", x = "Station", y = "Avg Daily Rainfall (mm)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## 3.6 Daily Rainfall Time Chart (Overall Trend)
+
+This can help us see if there is a clear trend or extreme value
+
+```{r}
+weather_active %>%
+  group_by(Date) %>%
+  summarise(Daily_Rainfall_Sum = sum(Daily.Rainfall.Total..mm.)) %>%
+  ggplot(aes(x = Date, y = Daily_Rainfall_Sum)) +
+  geom_line(color = "blue") +
+  labs(title = "Daily Rainfall over Time", y = "Total Daily Rainfall (mm)") +
+  theme_minimal()
+
+```
+
+## 3.7 Explore extreme rainfall events
+
+We can check the distribution of days with rainfall greater than 100mm.
+
+```{r}
+extreme_rain_years <- weather_active %>%
+  filter(Daily.Rainfall.Total..mm. > 100) %>%
+  count(Year)
+
+ggplot(extreme_rain_years, aes(x = Year, y = n)) +
+  geom_col(fill = "pink") +
+  labs(title = "Extreme Rainfall Days (>100mm)", y = "Number of Days") +
+  scale_x_continuous(breaks = seq(min(extreme_rain_years$Year), max(extreme_rain_years$Year), by = 1)) +
+  theme_minimal()
+
+
+```
+
+## 3.8 Top 10 Station with Highest Extreme Rainfall Rate
+
+```{r}
+# Proportion of Extreme Rain Days
+weather_active %>%
+  mutate(ExtremeRain = Daily.Rainfall.Total..mm. > 100) %>%
+  group_by(Station) %>%
+  summarise(ExtremeRate = mean(ExtremeRain)) %>%
+  arrange(desc(ExtremeRate)) %>%
+  head(10) %>%
+  ggplot(aes(x = reorder(Station, -ExtremeRate), y = ExtremeRate)) +
+  geom_col(fill = "pink") +
+  labs(title = "Top 10 Stations with Highest Extreme Rainfall Rate", y = "Extreme Rainfall Rate") +
+  theme_minimal() + 
+  coord_flip()
+```
+
+We conducted EDA to uncover key temporal and spatial rainfall trends in Singapore. Monthly and yearly rainfall summaries were visualized to observe seasonality and long-term changes. Station-wise comparisons revealed spatial heterogeneity, while time series plots allowed us to identify potential anomalies and extreme rainfall patterns.
+
+## 3.9 Spatial Rainfall EDA
+
+```{r}
+library(ggplot2)
+library(ggmap)
+library(ggrepel)
+
+weather_active %>%
+  group_by(Station, Latitude, Longitude) %>%
+  summarise(Avg_Rain = mean(Daily.Rainfall.Total..mm.)) %>%
+  ggplot(aes(x = Longitude, y = Latitude, color = Avg_Rain)) +
+  geom_point(size = 3) +
+  scale_color_viridis_c() +
+  labs(title = "Average Daily Rainfall by Station Location", color = "Avg Rainfall (mm)") +
+  theme_minimal()
+
+```
+
+## 3.10 Time series Plot
+
+```{r}
+# Time Series Plot
+library(forecast)
+library(tsibble)
+library(lubridate)
+
+rain_ts <- weather_active %>%
+  group_by(Date) %>%
+  summarise(Total_Rain = sum(Daily.Rainfall.Total..mm., na.rm = TRUE)) %>%
+  ts(start = c(2018, 1), frequency = 365)
+
+autoplot(rain_ts) +
+  labs(title = "Total Daily Rainfall Over Time", y = "Rainfall (mm)")
+```
+
+## 3.11 Monthly Rainfall by Monsoon Season
+
+```{r}
+weather_active %>%
+  group_by(Season, Month) %>%
+  summarise(Avg_Rain = mean(Daily.Rainfall.Total..mm., na.rm = TRUE)) %>%
+  ggplot(aes(x = Month, y = Avg_Rain, fill = Season)) +
+  geom_col(position = "dodge") +
+  scale_x_continuous(breaks = 1:12)
+  labs(title = "Monthly Rainfall by Monsoon Season")
+
+```
+
+This grouped bar chart reveals the monthly average daily rainfall categorized by monsoon seasons. We observe that rainfall tends to peak during the **Northeast Monsoon (Dec–Jan)** and the **Inter-monsoon periods (Apr–May, Oct–Nov)**, while the **Southwest Monsoon (Jun–Sep)** exhibits relatively lower rainfall on average. These patterns align well with the seasonal transition periods and help in understanding Singapore’s bimodal rainfall distribution.
+
+## 3.12 Monthly Average Rainfall Heatmap
+
+```{r}
+
+monthly_avg_rain <- weather_active %>%
+  group_by(Year, Month) %>%
+  summarise(Avg_Rain = mean(Daily.Rainfall.Total..mm., na.rm = TRUE))
+
+ggplot(monthly_avg_rain, aes(x = factor(Month), y = factor(Year), fill = Avg_Rain)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = round(Avg_Rain, 1)), size = 3, color = "black") +
+  scale_fill_viridis_c(option = "C", name = "Avg Rainfall (mm)") +
+  labs(
+    title = "Monthly Average Rainfall Heatmap",
+    x = "Month",
+    y = "Year"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+# 4. Confirmatory Data Analysis
+
+```{r}
+# write.csv(weather_active, "weather_active.csv", row.names = FALSE)
+
+```
+
+## 4.1 Verify if there are significant differences between different Monsoon seasons
+
+```{r}
+anova_result <- aov(Daily.Rainfall.Total..mm. ~ Season, data = weather_active)
+summary(anova_result)
+```
+
+```{r}
+TukeyHSD(anova_result)
+```
+
+```{r}
+ggbetweenstats(
+  data = weather_active %>% filter(Year == 2021),
+  x = Season,
+  y = Daily.Rainfall.Total..mm.,
+  type = "p",
+  pairwise.comparisons = TRUE,
+  pairwise.display = "s",
+  output = "plot"
+)
+
+```
+
+```{r}
+library(ggplot2)
+library(ggpubr)
+library(dplyr)
+
+summary_stats <- weather_active %>%
+  group_by(Season) %>%
+  summarise(
+    Mean_Rain = round(mean(Daily.Rainfall.Total..mm., na.rm = TRUE), 2),
+    Median_Rain = round(median(Daily.Rainfall.Total..mm., na.rm = TRUE), 2)
+  )
+
+
+ggplot(weather_active, aes(x = Season, y = Daily.Rainfall.Total..mm., fill = Season)) +
+  geom_boxplot() +
+  stat_compare_means(method = "anova", label.y = 120) +  
+  stat_compare_means(
+    method = "t.test",
+    comparisons = list(
+      c("Inter-monsoon II", "Southwest Monsoon"),
+      c("Southwest Monsoon", "Northeast Monsoon"),
+      c("Inter-monsoon II", "Inter-monsoon I")
+    ),
+    label = "p.format"
+  ) +
+ 
+  geom_text(
+    data = summary_stats,
+    aes(x = Season, y = 105, label = paste("Mean:", Mean_Rain)),
+    inherit.aes = FALSE,
+    color = "black",
+    size = 3.5
+  ) +
+
+  geom_text(
+    data = summary_stats,
+    aes(x = Season, y = 95, label = paste("Median:", Median_Rain)),
+    inherit.aes = FALSE,
+    color = "darkblue",
+    size = 3.5
+  ) +
+  labs(
+    title = "Comparison of Daily Rainfall across Monsoon Seasons",
+    y = "Daily Rainfall (mm)",
+    x = "Monsoon Season"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+```
+
+## 4.2 Does Extreme Rainfall significantly increase in different years
+
+Observe whether extreme rainfall (such as days\>100mm) has increased in recent years.
+
+```{r}
+extreme_days_by_year <- weather_active %>%
+  filter(Daily.Rainfall.Total..mm. > 100) %>%
+  count(Year)  
+
+model_poisson <- glm(n ~ Year, family = "poisson", data = extreme_days_by_year)
+
+summary(model_poisson)
+
+```
+
+```{r}
+ggplot(extreme_days_by_year, aes(x = Year, y = n)) +
+  geom_point(size = 3, color = "darkred") +
+  geom_smooth(method = "glm", method.args = list(family = "poisson"),
+              se = TRUE, color = "steelblue") +
+  labs(title = "Poisson Regression: Extreme Rainfall Days by Year",
+       x = "Year", y = "Extreme Rainfall Days") +
+  theme_minimal()
+
+```
+
+A Poisson regression was performed to evaluate whether the number of extreme rainfall days (daily rainfall \> 100mm) has increased over the years.\
+The analysis revealed a statistically significant positive association between year and the count of extreme rainfall days (β = 0.14, *p* \< 0.001).\
+This suggests that the frequency of extreme rainfall events has been increasing in recent years.
+
+## 4.3 Regional difference analysis (whether the rainfall in the southeast, northwest, and northwest is different)
+
+```{r}
+weather_active <- weather_active %>%
+  mutate(MainRegion = case_when(
+    Station %in% c("Pasir Ris (West)", "Pasir Ris Central", "Simei", "Tanjong Katong", "Marine Parade") ~ "East", 
+    Station %in% c("Punggol", "Serangoon") ~ "Northeast",
+    Station %in% c("Kranji Reservoir", "Mandai") ~ "North",
+    Station %in% c("Jurong Pier", "Tuas", "Bukit Panjang", "Choa Chu Kang (Central)", "Lim Chu Kang") ~ "West",
+    TRUE ~ "Central"
+  ))
+```
+
+```{r}
+anova_mainregion <- aov(Daily.Rainfall.Total..mm. ~ MainRegion, data = weather_active)
+summary(anova_mainregion)
+
+TukeyHSD(anova_mainregion)
+
+```
+
+```{r}
+ggplot(weather_active, aes(x = MainRegion, y = Daily.Rainfall.Total..mm., fill = MainRegion)) +
+  geom_boxplot() +
+  stat_compare_means(method = "anova", label.y = 120) +
+  labs(title = "Daily Rainfall by Region", y = "Rainfall (mm)", x = "Region") +
+  theme_minimal()
+
+```
+
+## 4.4 Linear Regression (Rainfall\~Month)
+
+Observe the overall trend of month vs rainfall
+
+```{r}
+lm_month <- lm(Daily.Rainfall.Total..mm. ~ Month, data = weather_active)
+summary(lm_month)
+
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(weather_active, aes(x = Month, y = Daily.Rainfall.Total..mm.)) +
+  geom_jitter(alpha = 0.2, color = "lightblue") +
+  geom_smooth(method = "lm", se = TRUE, color = "darkblue") +
+  labs(title = "Linear Trend of Rainfall by Month",
+       x = "Month", y = "Daily Rainfall (mm)") +
+  theme_minimal()
+
+```
+
+Click here you can see the shiny app original version
+
+<https://wangxingyun.shinyapps.io/final_project/>

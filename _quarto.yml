@@ -2,14 +2,35 @@ project:
   type: website
   
 website:
-  title: "RainSense"
+  title: ""
   search: false
   navbar:
     background: "#134178"
     foreground: white
+    logo: "images/logo.png"
     right:
-      - href: "Pages/proposal.html"
-        text: PROPOSAL
+      - text: "Proposal"
+        href: "Pages/Proposal.html"
+      - text: "Poster"
+        href: "Pages/Poster.html"
+      - text: "Shiny App"
+        menu:
+        - text: "Shiny App"
+          href: "Pages/ShinyApp.html"
+        - text: "User Guide"
+          href: "Pages/UserGuide.pdf"
+      - text: "Prototype"
+        menu:
+        - text: "EDA & CDA"
+          href: "Pages/Prototype/EDA_CDA.html"
+        - text: "Temporal Analysis"
+          href: "Pages/Prototype/TemporalAnalysis.html"
+        - text: "Spatial Analysis"
+          href: "Pages/Prototype/SpatialAnalysis.html"
+        - text: "Forecasting"
+          href: "Pages/Prototype/Forecasting.html"
+      - text: "Team"
+        href: "Pages/About.html"
 
 format:
   html:
