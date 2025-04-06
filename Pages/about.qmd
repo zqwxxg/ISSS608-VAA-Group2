@@ -1,5 +1,5 @@
 ---
-title: "??????? Meet the RainSense Team"
+title: "Meet the RainSense Team"
 title-block-banner: true
 ---
 
@@ -13,4 +13,4 @@ Our goal is to empower users with intuitive tools to explore Singapore's rainfal
 
 -   [Xie Haoyang](https://isss608-xiehaoyang.netlify.app/)
 
--   
+-   [Wang Xingyun](https://isss608-star.netlify.app/)

@@ -1,1 +1,6 @@
+---
+title: "Project Overview"
+title-block-banner: true
+---
+
 ![](/images/Group2_Poster.jpg){fig-align="center"}

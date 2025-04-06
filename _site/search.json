@@ -175,6 +175,13 @@
     "text": "Time-Series Forecasting\nThis step involves building a statistical model to predict future rainfall. This step involves building a statistical model to predict future rainfall by first splitting the dataset into training and testing sets to evaluate model performance. Statistical models such as ETS, ARIMA, and SARIMA are then implemented for forecasting. The model’s accuracy is assessed using metrics like Mean Absolute Error (MAE), Root Mean Square Error (RMSE), and the R² score to ensure reliable predictions. Finally, the model is used to forecast future rainfall values, which are validated against historical trends to assess predictive accuracy."
   },
   {
+    "objectID": "Pages/About.html",
+    "href": "Pages/About.html",
+    "title": "Meet the RainSense Team",
+    "section": "",
+    "text": "We are a team of aspiring data and tech professionals from the Master of IT in Business (MITB) program at Singapore Management University (SMU). RainSense is our passion project-born from a shared interest in environmental analytics, smart city solutions, and impactful data storytelling.\nOur goal is to empower users with intuitive tools to explore Singapore’s rainfall variability and forecast patterns, blending advanced analytics with user-friendly design.\n\nMembers\n\nWong Zi Qi\nXie Haoyang\nWang Xingyun"
+  },
+  {
     "objectID": "Pages/Prototype/EDA_CDA.html",
     "href": "Pages/Prototype/EDA_CDA.html",
     "title": "Exploratory Data Analysis and Confirmatory Data Analysis",
@@ -362,12 +369,5 @@
     "title": "Spatial Rainfall Analysis",
     "section": "3.5 Visual Differences",
     "text": "3.5 Visual Differences\n\nAppearance:\nThe IDW interpolation map exhibits a more segmented appearance, characterized by sharper transitions between rainfall zones. In contrast, the Ordinary Kriging map displays smoother gradients, offering continuous transitions in rainfall estimates that reflect a more natural spatial variation.\nHotspot areas:\nBoth methods identify rainfall hotspots in the western and central regions of Singapore. However, while the IDW map presents these areas with clearly defined boundaries, the Kriging map portrays similar hotspots with a more diffused and realistic spatial spread, aligning with expected spatial autocorrelation patterns.\nLow-rainfall zones:\nIn the eastern and northeastern zones, the IDW map shows distinctly delineated low-rainfall areas, whereas the Kriging map reflects a similar trend but with more gradual transitions, resulting in a smoother interpretation of rainfall decline across space.\nInterpolation quality:\nOverall, IDW performs well in areas with dense station coverage, but it may oversimplify spatial variability, especially where rainfall patterns are complex. Ordinary Kriging, on the other hand, provides statistically optimal estimates, particularly effective when spatial dependence is strong."
-  },
-  {
-    "objectID": "Pages/About.html",
-    "href": "Pages/About.html",
-    "title": "??????? Meet the RainSense Team",
-    "section": "",
-    "text": "We are a team of aspiring data and tech professionals from the Master of IT in Business (MITB) program at Singapore Management University (SMU). RainSense is our passion project-born from a shared interest in environmental analytics, smart city solutions, and impactful data storytelling.\nOur goal is to empower users with intuitive tools to explore Singapore’s rainfall variability and forecast patterns, blending advanced analytics with user-friendly design.\n\nMembers\n\nWong Zi Qi"
   }
 ]
