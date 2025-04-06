@@ -16,7 +16,7 @@ website:
       - text: "Shiny App"
         menu:
         - text: "Shiny App"
-          href: "Pages/ShinyApp.html"
+          href: "http://zqwxxg.shinyapps.io/RainSense"
         - text: "User Guide"
           href: "Pages/UserGuide.pdf"
       - text: "Prototype"
@@ -31,7 +31,13 @@ website:
           href: "Pages/Prototype/Forecasting.html"
       - text: "Team"
         href: "Pages/About.html"
-
+      - text: "Github"
+        menu:
+        - text: "Project Site"
+          href: "https://github.com/zqwxxg/ISSS608-VAA-Group2"
+        - text: "Shiny App"
+          href: "https://github.com/zqwxxg/RainSenseShinyApp"
+          
 format:
   html:
     theme: morph
