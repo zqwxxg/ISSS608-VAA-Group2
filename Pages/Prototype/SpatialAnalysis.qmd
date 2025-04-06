@@ -114,20 +114,20 @@ weather_sf <- st_as_sf(weather,
 It is visualized as shown below.
 
 ```{r}
-# tm_check_fix()
-# tmap_mode("view")
-# 
-# tm_shape(weather_sf) +
-#   tm_symbols(
-#     fill = "Status",
-#     fill.scale = tm_scale(c("Active" = "#00b050", "Inactive" = "#ff4d4d")),
-#     size = 0.6,
-#     size.scale = tm_scale(1),
-#     fill.legend = tm_legend("Status"),
-#     popup.vars = c("Station")
-#     ) +
-#   tm_title("Weather Station Map") +
-#   tm_view(basemap.server = "Esri.WorldTopoMap")
+tm_check_fix()
+tmap_mode("view")
+
+tm_shape(weather_sf) +
+  tm_symbols(
+    fill = "Status",
+    fill.scale = tm_scale(c("Active" = "#00b050", "Inactive" = "#ff4d4d")),
+    size = 0.6,
+    size.scale = tm_scale(1),
+    fill.legend = tm_legend("Status"),
+    popup.vars = c("Station")
+    ) +
+  tm_title("Weather Station Map") +
+  tm_view(basemap.server = "Esri.WorldTopoMap")
 ```
 
 Next, the data is aggregated to represent monthly spatial points, summarizing rainfall measurements by station and month. For spatial referencing, the latitude and longitude values for each station are extracted using the `first()` function, as these coordinates remain constant within each station.
@@ -164,14 +164,14 @@ sg_boundary <- st_read(dsn = "data/geospatial",
 The pre-processed data is visualized using a quantitative dot map, offering a spatial overview of monthly rainfall distribution across Singapore at the station level.
 
 ```{r}
-# tm_check_fix()
-# tmap_mode("view")
-# 
-# tm_shape(sg_boundary) +
-# tm_borders(lwd = 1, col = "gray50") +
-#   tm_shape(rf_data_sf) +
-#   tm_dots(fill = 'MonthlyRain', size = 0.8) +
-#   tm_title("Monthly Rainfall Distribution by Station")
+tm_check_fix()
+tmap_mode("view")
+
+tm_shape(sg_boundary) +
+tm_borders(lwd = 1, col = "gray50") +
+  tm_shape(rf_data_sf) +
+  tm_dots(fill = 'MonthlyRain', size = 0.8) +
+  tm_title("Monthly Rainfall Distribution by Station")
 ```
 
 ```{r}

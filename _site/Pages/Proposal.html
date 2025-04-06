@@ -201,7 +201,7 @@ ul.task-list li input[type="checkbox"] {
 </div>
 <section id="data-extraction" class="level2">
 <h2 class="anchored" data-anchor-id="data-extraction">Data Extraction</h2>
-<p>The key datasets used in this project is Meteorological Service Singapore (MSS) – Rainfall &amp; Weather Data. This dataset provides historical and real-time weather observations, including rainfall, temperature, and humidity levels across Singapore.</p>
+<p>The key datasets used in this project is Meteorological Service Singapore (MSS)’s Rainfall &amp; Weather Data. This dataset provides historical and real-time weather observations across Singapore.</p>
 <div id="data_table" class="dataTable">
 <table class="caption-top table">
 <colgroup>
@@ -213,64 +213,44 @@ ul.task-list li input[type="checkbox"] {
 <tr class="header">
 <th>Variable</th>
 <th>Description</th>
-<th>Time Range &amp; Spatial Coverage</th>
+<th>Time Range</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>Location</td>
-<td>Rainfall data collected from 50-60 locations across Singapore</td>
-<td>2018 – Present, 62 locations</td>
+<td>Rainfall data collected from 63 locations across Singapore</td>
+<td>2018 Jan - 2024 Dec</td>
 </tr>
 <tr class="even">
 <td>Year-Month</td>
 <td>Timestamp of the recorded data (organized by year and month)</td>
-<td>2018 – Present, 62 locations</td>
+<td>2018 Jan - 2024 Dec</td>
 </tr>
 <tr class="odd">
 <td>Total daily rainfall (mm)</td>
 <td>Total daily rainfall, used to measure overall precipitation levels</td>
-<td>2018 – Present, 62 locations</td>
+<td>2018 Jan - 2024 Dec</td>
 </tr>
 <tr class="even">
 <td>Hourly rainfall intensity (mm/hr)</td>
 <td>Hourly rainfall intensity, used to analyze extreme rainfall events</td>
-<td>2018 – Present, 62 locations</td>
+<td>2018 Jan - 2024 Dec</td>
 </tr>
 <tr class="odd">
 <td>Maximum 30/60/120-minute rainfall (mm)</td>
 <td>Maximum rainfall over 30/60/120 minutes, used to detect extreme weather patterns</td>
-<td>2018 – Present, 62 locations</td>
+<td>2018 Jan - 2024 Dec</td>
 </tr>
 <tr class="even">
-<td>Temperature (°C)</td>
-<td>Daily temperature variations, used to analyze correlations with rainfall patterns</td>
-<td>2018 – Present, 62 locations</td>
-</tr>
-<tr class="odd">
-<td>Humidity (%)</td>
-<td>Recorded humidity levels, used to study the impact of humidity on rainfall</td>
-<td>2018 – Present, 62 locations</td>
-</tr>
-<tr class="even">
-<td>Wind speed (km/h)</td>
-<td>Wind speed measurements, used to examine its relationship with rainfall patterns</td>
-<td>2018 – Present, 62 locations</td>
-</tr>
-<tr class="odd">
 <td>Longitude &amp; Latitude of Rainfall Stations</td>
-<td>Geographic coordinates of the 41 rainfall stations for spatial mapping</td>
-<td>Static data, 41 rainfall stations</td>
+<td>Geographic coordinates of the 63 rainfall stations for spatial mapping</td>
+<td>Static data</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Shapefile of Singapore</td>
 <td>Geospatial vector data for spatial analysis</td>
 <td>Nationwide</td>
-</tr>
-<tr class="odd">
-<td>Flood prone areas in Singapore</td>
-<td>Low-lying areas with a history of flooding, used as an overlay in spatial analysis</td>
-<td>36 locations</td>
 </tr>
 </tbody>
 </table>
@@ -316,7 +296,7 @@ ul.task-list li input[type="checkbox"] {
 </ul></li>
 <li><strong>Clustering analysis:</strong>
 <ul>
-<li>Uses machine learning, such as KMeans or DBSCAN to identify rainfall hotspots.</li>
+<li>Uses time series clustering to identify rainfall hotspots.</li>
 <li>Groups locations experiencing similar rainfall intensities, which is useful for urban water management.</li>
 </ul></li>
 </ol>
