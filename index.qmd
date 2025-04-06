@@ -1,8 +1,12 @@
 ---
 format: html
-page-layout: full
 ---
 
-::: {#custom-hero-banner}
-![](images/home_background.png)
-:::
+<style>
+  body {
+    background-image: url("images/home_background.png");   
+    background-size: cover;   
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+</style>
